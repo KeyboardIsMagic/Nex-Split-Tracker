@@ -59,5 +59,5 @@ public class NexSplitTrackerPlugin extends Plugin
 		clientToolbar.removeNavigation(navButton);
 	}
 
-	// Add your plugin logic here
+	// Add plugin logic
 }

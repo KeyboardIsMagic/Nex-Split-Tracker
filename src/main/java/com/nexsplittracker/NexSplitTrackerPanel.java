@@ -9,16 +9,34 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.Arrays;
+import java.time.LocalDate;
+import  java.util.HashMap;
+import java.util.Map;
 
-public class NexSplitTrackerPanel extends PluginPanel {
+public class NexSplitTrackerPanel extends PluginPanel
+{
     private final ItemManager itemManager;
+
+
+    // Primary Table
     private JTable dropTable;
     private DefaultTableModel tableModel;
+
+
+    // Secondary Table
+    private JTable itemDetailsTable;
+    private DefaultTableModel itemDetailsTableModel;
+
+
     private JComboBox<String> itemComboBox;
     private JTextField splitTextField;
     private JCheckBox receivedCheckBox;
+    private Map<String, Integer> itemToRowMap;
 
-    public NexSplitTrackerPanel(ItemManager itemManager) {
+
+    //ctor
+    public NexSplitTrackerPanel(ItemManager itemManager)
+    {
         super();
         this.itemManager = itemManager;
         setLayout(new BorderLayout());
@@ -29,27 +47,33 @@ public class NexSplitTrackerPanel extends PluginPanel {
         createUserInputPanel();
     }
 
-    private void createHeader() {
+
+    private void createHeader()
+    {
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
-        headerPanel.setBackground(Color.DARK_GRAY);
+        headerPanel.setBackground(ColorScheme.Transp);
 
         JLabel headerLabel = new JLabel("Nex Split Tracker", SwingConstants.CENTER);
-        headerLabel.setForeground(Color.WHITE);
-        headerLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        headerLabel.setForeground(Color.white);
+        headerLabel.setFont(new Font("Dialog", Font.BOLD, 16));
         headerPanel.add(headerLabel, BorderLayout.CENTER);
 
         add(headerPanel, BorderLayout.NORTH);
     }
 
-    private void initializeTable() {
+
+    private void initializeTable()
+    {
         String[] columnNames = {"Drop", "Received", "Seen", "Split"};
-        tableModel = new DefaultTableModel(columnNames, 0) {
+        tableModel = new DefaultTableModel(columnNames, 0)
+        {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false; // Make all rows non-editable
             }
         };
+
 
         dropTable = new JTable(tableModel);
 
@@ -75,8 +99,11 @@ public class NexSplitTrackerPanel extends PluginPanel {
         tableModel.addRow(new Object[]{"Total", 0, 0, 0.0}); // Footer row for totals
     }
 
-    private void initializeTableData() {
-        for (NexUniques unique : NexUniques.values()) {
+
+    private void initializeTableData()
+    {
+        for (NexUniques unique : NexUniques.values())
+        {
             ImageIcon icon = new ImageIcon(itemManager.getImage(unique.getItemId()));
             icon.setDescription(unique.getName());
             Object[] row = {icon, 0, 0, 0.0};
@@ -84,7 +111,9 @@ public class NexSplitTrackerPanel extends PluginPanel {
         }
     }
 
-    private void createUserInputPanel() {
+
+    private void createUserInputPanel()
+    {
         JPanel userInputPanel = new JPanel();
         userInputPanel.setLayout(new GridLayout(4, 2, 5, 5));
         userInputPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -97,13 +126,17 @@ public class NexSplitTrackerPanel extends PluginPanel {
         splitTextField = new JTextField();
 
         JButton addButton = new JButton("Add Drop");
-        addButton.addActionListener(e -> {
+        addButton.addActionListener(e ->
+        {
             String selectedItem = (String) itemComboBox.getSelectedItem();
             boolean isReceived = receivedCheckBox.isSelected();
             double splitAmount;
-            try {
+            try
+            {
                 splitAmount = Double.parseDouble(splitTextField.getText());
-            } catch (NumberFormatException ex) {
+            }
+            catch (NumberFormatException ex)
+            {
                 splitAmount = 0.0; // Handle invalid number format
             }
             updateItem(selectedItem, isReceived, splitAmount);
@@ -121,16 +154,22 @@ public class NexSplitTrackerPanel extends PluginPanel {
         add(userInputPanel, BorderLayout.SOUTH);
     }
 
-    private void updateItem(String itemName, boolean received, double splitAmount) {
+
+    private void updateItem(String itemName, boolean received, double splitAmount)
+    {
         int index = findRowIndexByItemName(itemName);
-        if (index != -1 && index < tableModel.getRowCount() - 1) {
+        if (index != -1 && index < tableModel.getRowCount() - 1)
+        {
             int currentReceived = (Integer) tableModel.getValueAt(index, 1);
             int currentSeen = (Integer) tableModel.getValueAt(index, 2);
             double currentSplit = (Double) tableModel.getValueAt(index, 3);
 
-            if (received) {
+            if (received)
+            {
                 currentReceived++;
-            } else {
+            }
+            else
+            {
                 currentSeen++;
             }
 
@@ -143,12 +182,17 @@ public class NexSplitTrackerPanel extends PluginPanel {
         updateTotals();
     }
 
-    private int findRowIndexByItemName(String itemName) {
-        for (int i = 0; i < tableModel.getRowCount(); i++) {
+
+    private int findRowIndexByItemName(String itemName)
+    {
+        for (int i = 0; i < tableModel.getRowCount(); i++)
+        {
             Object cellValue = tableModel.getValueAt(i, 0);
-            if (cellValue instanceof ImageIcon) {
+            if (cellValue instanceof ImageIcon)
+            {
                 ImageIcon icon = (ImageIcon) cellValue;
-                if (icon.getDescription().equals(itemName)) {
+                if (icon.getDescription().equals(itemName))
+                {
                     return i;
                 }
             }
@@ -156,13 +200,16 @@ public class NexSplitTrackerPanel extends PluginPanel {
         return -1;
     }
 
-    private void updateTotals() {
+
+    private void updateTotals()
+    {
         int totalDrops = 0;
         int totalReceived = 0;
         int totalSeen = 0;
         double totalSplit = 0.0;
 
-        for (int i = 1; i < tableModel.getRowCount() - 1; i++) {
+        for (int i = 1; i < tableModel.getRowCount() - 1; i++)
+        {
             totalReceived += (Integer) tableModel.getValueAt(i, 1);
             totalSeen += (Integer) tableModel.getValueAt(i, 2);
             totalSplit += (Double) tableModel.getValueAt(i, 3);
@@ -177,10 +224,13 @@ public class NexSplitTrackerPanel extends PluginPanel {
         tableModel.setValueAt(totalSplit, lastRowIndex, 3);
     }
 
-    private class ImageRenderer extends DefaultTableCellRenderer {
+    private class ImageRenderer extends DefaultTableCellRenderer
+    {
         @Override
-        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-            if (value instanceof ImageIcon) {
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column)
+        {
+            if (value instanceof ImageIcon)
+            {
                 JLabel label = new JLabel((ImageIcon) value);
                 label.setHorizontalAlignment(JLabel.CENTER);
                 return label;
@@ -188,4 +238,8 @@ public class NexSplitTrackerPanel extends PluginPanel {
             return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
         }
     }
+
+
+
+
 }
