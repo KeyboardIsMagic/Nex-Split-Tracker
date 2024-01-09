@@ -50,7 +50,7 @@ public class NexSplitTrackerPanel extends PluginPanel {
 
         JLabel headerLabel = new JLabel("Nex Split Tracker", SwingConstants.CENTER);
         headerLabel.setForeground(Color.WHITE);
-        headerLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        headerLabel.setFont(new Font("Dialog", Font.BOLD, 16));
         headerPanel.add(headerLabel, BorderLayout.CENTER);
 
         add(headerPanel);
