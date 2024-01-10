@@ -145,7 +145,8 @@ public class NexSplitTrackerPanel extends PluginPanel {
     }
 
 
-    private Map<String, ItemAggregatedData> aggregateDataForPrimaryTable() {
+    private Map<String, ItemAggregatedData> aggregateDataForPrimaryTable()
+    {
         Map<String, ItemAggregatedData> aggregatedDataMap = new HashMap<>();
         for (ItemData item : itemDataList) {
             String itemName = item.getItemName();
@@ -153,13 +154,15 @@ public class NexSplitTrackerPanel extends PluginPanel {
             ItemAggregatedData aggregatedData = aggregatedDataMap.get(itemName);
 
             if (item.isReceived()) {
-                aggregatedData.increaseReceived(item.isReceived());
+                aggregatedData.increaseReceived();
+            } else {
+                aggregatedData.increaseSeen();
             }
-            //aggregatedData.increaseSeen(item.isReceived()); // Pass whether the item is received
             aggregatedData.increaseSplit(item.getSplitAmount());
         }
         return aggregatedDataMap;
     }
+
 
     private void updatePrimaryTableWithAggregatedData(Map<String, ItemAggregatedData> aggregatedDataMap) {
         for (Map.Entry<String, ItemAggregatedData> entry : aggregatedDataMap.entrySet()) {
@@ -425,8 +428,7 @@ public class NexSplitTrackerPanel extends PluginPanel {
         return shortName; // Fallback, in case no match is found
     }
 
-    private void updatePrimaryTable()
-    {
+    private void updatePrimaryTable() {
         // Reset the primary table's data
         resetPrimaryTableData();
 
@@ -437,7 +439,11 @@ public class NexSplitTrackerPanel extends PluginPanel {
             aggregatedDataMap.putIfAbsent(itemName, new ItemAggregatedData());
             ItemAggregatedData aggregatedData = aggregatedDataMap.get(itemName);
 
-            aggregatedData.increaseReceived(item.isReceived());
+            if (item.isReceived()) {
+                aggregatedData.increaseReceived();
+            } else {
+                aggregatedData.increaseSeen();
+            }
             aggregatedData.increaseSplit(item.getSplitAmount());
         }
 
@@ -457,39 +463,38 @@ public class NexSplitTrackerPanel extends PluginPanel {
         updateTotals();
     }
 
-    private class ItemAggregatedData
+
+    public class ItemAggregatedData
     {
         private int receivedCount = 0;
+        private int seenCount = 0;
         private double totalSplit = 0.0;
 
-        public void increaseReceived(boolean isReceived)
-        {
-            if (isReceived)
-            {
-                receivedCount++;
-            }
+        public void increaseReceived() {
+            receivedCount++;
         }
 
-        public void increaseSplit(double split)
-        {
+        public void increaseSeen() {
+            seenCount++;
+        }
+
+        public void increaseSplit(double split) {
             totalSplit += split;
         }
 
-        public int getReceivedCount()
-        {
+        public int getReceivedCount() {
             return receivedCount;
         }
 
-        public int getSeenCount()
-        {
-            return itemDataList.size() - receivedCount;
+        public int getSeenCount() {
+            return seenCount;
         }
 
-        public double getTotalSplit()
-        {
+        public double getTotalSplit() {
             return totalSplit;
         }
     }
+
 
 
     private void resetPrimaryTableData()
