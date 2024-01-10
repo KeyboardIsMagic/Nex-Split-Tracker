@@ -1,5 +1,8 @@
 package com.nexsplittracker;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import net.runelite.client.RuneLite;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.ui.PluginPanel;
 
@@ -11,11 +14,20 @@ import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.FileReader;
+import java.io.Reader;
+import java.io.File;
+import java.lang.reflect.Type;
+import com.google.gson.reflect.TypeToken;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class NexSplitTrackerPanel extends PluginPanel {
     private final ItemManager itemManager;
@@ -28,18 +40,36 @@ public class NexSplitTrackerPanel extends PluginPanel {
     private JCheckBox receivedCheckBox;
 
     private final List<ItemData> itemDataList = new ArrayList<>();
+    private static final Logger logger = Logger.getLogger(NexSplitTrackerPanel.class.getName());
+    private static final File PLUGIN_DIR = new File(RuneLite.RUNELITE_DIR, "NexSplitTracker");
 
-    public NexSplitTrackerPanel(ItemManager itemManager) {
+    public NexSplitTrackerPanel(ItemManager itemManager)
+    {
         super();
         this.itemManager = itemManager;
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+
 
         createHeader();
         initializeTable();
         initializeTableData();
         userInputPanel();
         initializeSecondaryTable();
+
+        try
+        {
+            createPluginDirectory();
+            String dataFilePath = new File(PLUGIN_DIR, "data.json").getAbsolutePath();
+            loadDataFromFile(dataFilePath);
+            updateTablesFromLoadedData();
+        }
+        catch (Exception e)
+        {
+            logger.log(Level.SEVERE, "Error initializing plugin: ", e);
+        }
+
     }
+
 
     private void createHeader()
     {
@@ -56,9 +86,115 @@ public class NexSplitTrackerPanel extends PluginPanel {
         add(headerPanel);
     }
 
+
+    private void createPluginDirectory()
+    {
+        if (!PLUGIN_DIR.exists()) {
+            PLUGIN_DIR.mkdirs(); // Create directory if it doesn't exist
+        }
+    }
+
+
+    private void saveDataToFile(String filePath)
+    {
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        try
+        {
+            FileWriter writer = new FileWriter(filePath);
+            gson.toJson(itemDataList, writer);
+            writer.flush();
+            writer.close();
+            logger.info("Data saved to file: " + filePath);
+        }
+        catch (IOException e)
+        {
+            logger.log(Level.SEVERE, "Error saving data to file: ", e);
+        }
+    }
+
+
+
+    private void loadDataFromFile(String filePath)
+    {
+        Gson gson = new Gson();
+        try
+        {
+            Reader reader = new FileReader(filePath);
+            Type listType = new TypeToken<ArrayList<ItemData>>(){}.getType();
+            List<ItemData> loadedData = gson.fromJson(reader, listType);
+            if (loadedData != null)
+            {
+                itemDataList.addAll(loadedData);
+            }
+            reader.close();
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace(); // Handle exceptions
+        }
+        updatePrimaryTable(); // Populate primary table with loaded data
+        logger.info("Data loaded from file: " + filePath);
+    }
+
+    private void updateTablesFromLoadedData()
+    {
+        resetPrimaryTableData();
+        Map<String, ItemAggregatedData> aggregatedDataMap = aggregateDataForPrimaryTable();
+        updatePrimaryTableWithAggregatedData(aggregatedDataMap);
+        updateSecondaryTable();
+    }
+
+
+    private Map<String, ItemAggregatedData> aggregateDataForPrimaryTable() {
+        Map<String, ItemAggregatedData> aggregatedDataMap = new HashMap<>();
+        for (ItemData item : itemDataList) {
+            String itemName = item.getItemName();
+            aggregatedDataMap.putIfAbsent(itemName, new ItemAggregatedData());
+            ItemAggregatedData aggregatedData = aggregatedDataMap.get(itemName);
+
+            if (item.isReceived()) {
+                aggregatedData.increaseReceived(item.isReceived());
+            }
+            //aggregatedData.increaseSeen(item.isReceived()); // Pass whether the item is received
+            aggregatedData.increaseSplit(item.getSplitAmount());
+        }
+        return aggregatedDataMap;
+    }
+
+    private void updatePrimaryTableWithAggregatedData(Map<String, ItemAggregatedData> aggregatedDataMap) {
+        for (Map.Entry<String, ItemAggregatedData> entry : aggregatedDataMap.entrySet()) {
+            String itemName = entry.getKey();
+            ItemAggregatedData aggregatedData = entry.getValue();
+
+            int index = findRowIndexByItemName(itemName);
+            if (index != -1) {
+                int totalOccurrences = getTotalOccurrencesOfItem(itemName);
+                int seenCount = totalOccurrences - aggregatedData.getReceivedCount();
+
+                tableModel.setValueAt(aggregatedData.getReceivedCount(), index, 1); // Update 'Received' count
+                tableModel.setValueAt(seenCount, index, 2); // Update 'Seen' count
+                tableModel.setValueAt(aggregatedData.getTotalSplit(), index, 3); // Update 'Split' value
+            }
+        }
+    }
+
+
+
+    private int getTotalOccurrencesOfItem(String itemName) {
+        int count = 0;
+        for (ItemData item : itemDataList) {
+            if (item.getItemName().equals(itemName)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+
     private void initializeTable() {
         String[] columnNames = {"Drop", "Received", "Seen", "Split"};
-        tableModel = new DefaultTableModel(columnNames, 0) {
+        tableModel = new DefaultTableModel(columnNames, 0)
+        {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false; // Make all rows non-editable
@@ -89,7 +225,8 @@ public class NexSplitTrackerPanel extends PluginPanel {
         tableModel.addRow(new Object[]{"Total", 0, 0, 0}); // Footer row for totals
     }
 
-    private void initializeTableData() {
+    private void initializeTableData()
+    {
         for (NexUniques unique : NexUniques.values())
         {
             ImageIcon icon = new ImageIcon(itemManager.getImage(unique.getItemId()));
@@ -188,12 +325,16 @@ public class NexSplitTrackerPanel extends PluginPanel {
         itemDetailsTable = new JTable(itemDetailsTableModel);
 
         // Listener for delete functionality
-        itemDetailsTable.addMouseListener(new MouseAdapter() {
+        itemDetailsTable.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mousePressed(MouseEvent e) {
-                if (SwingUtilities.isRightMouseButton(e)) {
+            public void mousePressed(MouseEvent e)
+            {
+                if (SwingUtilities.isRightMouseButton(e))
+                {
                     int row = itemDetailsTable.rowAtPoint(e.getPoint());
-                    if (row >= 0 && row < itemDetailsTable.getRowCount()) {
+                    if (row >= 0 && row < itemDetailsTable.getRowCount())
+                    {
                         itemDetailsTable.setRowSelectionInterval(row, row);
                         showDeletePopup(e.getX(), e.getY(), row);
                     }
@@ -203,7 +344,8 @@ public class NexSplitTrackerPanel extends PluginPanel {
 
 
         // Configure the table to use the short names in the "Item" column
-        itemDetailsTable.getColumnModel().getColumn(0).setCellRenderer(new TableCellRenderer() {
+        itemDetailsTable.getColumnModel().getColumn(0).setCellRenderer(new TableCellRenderer()
+        {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column)
             {
@@ -255,8 +397,10 @@ public class NexSplitTrackerPanel extends PluginPanel {
 
         // Find and remove the corresponding item from the itemDataList
         ItemData toRemove = null;
-        for (ItemData item : itemDataList) {
-            if (item.getItemName().equals(fullName)) {
+        for (ItemData item : itemDataList)
+        {
+            if (item.getItemName().equals(fullName))
+            {
                 toRemove = item;
                 break;
             }
@@ -264,6 +408,8 @@ public class NexSplitTrackerPanel extends PluginPanel {
         if (toRemove != null) {
             itemDataList.remove(toRemove);
             updatePrimaryTable();
+            String dataFilePath = new File(PLUGIN_DIR, "data.json").getAbsolutePath();
+            saveDataToFile(dataFilePath);
         }
     }
 
@@ -279,7 +425,8 @@ public class NexSplitTrackerPanel extends PluginPanel {
         return shortName; // Fallback, in case no match is found
     }
 
-    private void updatePrimaryTable() {
+    private void updatePrimaryTable()
+    {
         // Reset the primary table's data
         resetPrimaryTableData();
 
@@ -344,6 +491,7 @@ public class NexSplitTrackerPanel extends PluginPanel {
         }
     }
 
+
     private void resetPrimaryTableData()
     {
         // Reset the counts and splits for all items in the primary table
@@ -386,14 +534,20 @@ public class NexSplitTrackerPanel extends PluginPanel {
             updateSecondaryTable();
         }
         updateTotals();
+        String dataFilePath = new File(PLUGIN_DIR, "data.json").getAbsolutePath();
+        saveDataToFile(dataFilePath);
     }
 
-    private int findRowIndexByItemName(String itemName) {
-        for (int i = 0; i < tableModel.getRowCount(); i++) {
+    private int findRowIndexByItemName(String itemName)
+    {
+        for (int i = 0; i < tableModel.getRowCount(); i++)
+        {
             Object cellValue = tableModel.getValueAt(i, 0);
-            if (cellValue instanceof ImageIcon) {
+            if (cellValue instanceof ImageIcon)
+            {
                 ImageIcon icon = (ImageIcon) cellValue;
-                if (icon.getDescription().equals(itemName)) {
+                if (icon.getDescription().equals(itemName))
+                {
                     return i;
                 }
             }
@@ -401,9 +555,11 @@ public class NexSplitTrackerPanel extends PluginPanel {
         return -1;
     }
 
-    private void updateSecondaryTable() {
+    private void updateSecondaryTable()
+    {
         itemDetailsTableModel.setRowCount(0); // Clear the table
-        for (ItemData item : itemDataList) {
+        for (ItemData item : itemDataList)
+        {
             JButton removeButton = new JButton("Remove");
             removeButton.addActionListener(e -> removeItem(item));
             itemDetailsTableModel.addRow(new Object[]{
@@ -420,6 +576,8 @@ public class NexSplitTrackerPanel extends PluginPanel {
     {
         itemDataList.remove(item);
         updateSecondaryTable();
+        String dataFilePath = new File(PLUGIN_DIR, "data.json").getAbsolutePath();
+        saveDataToFile(dataFilePath);
     }
 
 
@@ -458,8 +616,6 @@ public class NexSplitTrackerPanel extends PluginPanel {
             return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
         }
     }
-
-
 
 
 
