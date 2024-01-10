@@ -22,6 +22,7 @@ import java.io.File;
 import java.lang.reflect.Type;
 import com.google.gson.reflect.TypeToken;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -323,7 +324,7 @@ public class NexSplitTrackerPanel extends PluginPanel {
 
     private void initializeSecondaryTable()
     {
-        String[] detailColumnNames = {"Item", "Split", "Date", "Team Size"};
+        String[] detailColumnNames = {"Item", "Split", "Date", "Team"};
         itemDetailsTableModel = new DefaultTableModel(detailColumnNames, 0);
         itemDetailsTable = new JTable(itemDetailsTableModel);
 
@@ -563,14 +564,18 @@ public class NexSplitTrackerPanel extends PluginPanel {
     private void updateSecondaryTable()
     {
         itemDetailsTableModel.setRowCount(0); // Clear the table
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM d, yyyy");
+
         for (ItemData item : itemDataList)
         {
             JButton removeButton = new JButton("Remove");
             removeButton.addActionListener(e -> removeItem(item));
+            String formattedDate = item.getDate().format(formatter);
+
             itemDetailsTableModel.addRow(new Object[]{
                     item.getItemName(),
                     item.getSplitAmount(),
-                    item.getDate(),
+                    formattedDate,
                     item.getTeamSize(),
                     removeButton
             });
@@ -625,8 +630,4 @@ public class NexSplitTrackerPanel extends PluginPanel {
 
 
 }
-
-
-
-
 
