@@ -11,6 +11,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumnModel;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -376,8 +377,20 @@ public class NexSplitTrackerPanel extends PluginPanel {
 
         // Add the JScrollPane to panel
         add(itemDetailsScrollPane, BorderLayout.SOUTH);
+
+        // Schedule the adjustment of column widths after the table is displayed
+        SwingUtilities.invokeLater(this::adjustColumnWidths);
     }
 
+    private void adjustColumnWidths() {
+        TableColumnModel columnModel = itemDetailsTable.getColumnModel();
+        if (columnModel.getColumnCount() == 4) { // Ensure the table has the expected number of columns
+            columnModel.getColumn(0).setPreferredWidth(50); // Width for 'Item' column
+            columnModel.getColumn(1).setPreferredWidth(50); // Width for 'Split' column
+            columnModel.getColumn(2).setPreferredWidth(100); // Width for 'Date' column
+            columnModel.getColumn(3).setPreferredWidth(40); // Width for 'Team Size' column
+        }
+    }
 
     private void showDeletePopup(int x, int y, int row)
     {
@@ -622,6 +635,24 @@ public class NexSplitTrackerPanel extends PluginPanel {
                 JLabel label = new JLabel((ImageIcon) value);
                 label.setHorizontalAlignment(JLabel.CENTER);
                 return label;
+            }
+            return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+        }
+    }
+
+
+    class SplitCellRenderer extends DefaultTableCellRenderer {
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            if (value instanceof Number) {
+                Number num = (Number) value;
+                if (num.doubleValue() == num.longValue()) {
+                    // If the number is an integer
+                    value = String.format("%d", num.longValue());
+                } else {
+                    // If the number is a decimal
+                    value = String.format("%.1f", num.doubleValue());
+                }
             }
             return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
         }
