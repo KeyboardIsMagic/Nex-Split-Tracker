@@ -12,7 +12,6 @@ class ItemData
     private boolean isReceived;
 
 
-    // Ctor
     public ItemData(String itemName, double splitAmount, LocalDate date, int teamSize, boolean isReceived)
     {
         this.itemName = itemName;
@@ -23,8 +22,6 @@ class ItemData
     }
 
 
-
-    // Getters
     public String getItemName()
     {
         return itemName;
@@ -51,8 +48,6 @@ class ItemData
     }
 
 
-
-    // Setters
     public void setItemName(String itemName)
     {
         this.itemName = itemName;
@@ -79,8 +74,6 @@ class ItemData
     }
 
 
-
-    //toString method for debugging
     @Override
     public String toString()
     {
