@@ -564,7 +564,7 @@ public class NexSplitTrackerPanel extends PluginPanel {
     private void updateSecondaryTable()
     {
         itemDetailsTableModel.setRowCount(0); // Clear the table
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM d, yyyy");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yy");
 
         for (ItemData item : itemDataList)
         {
