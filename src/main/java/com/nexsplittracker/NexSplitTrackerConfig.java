@@ -10,14 +10,13 @@ public interface NexSplitTrackerConfig extends Config
 {
 	// Example configuration item
 	@ConfigItem(
-			keyName = "exampleSetting",
-			name = "Example Setting",
-			description = "This is an example configuration setting."
+			keyName = "increaseDropRate",
+			name = "Increase Drop Rate",
+			description = "Might do something if you really believe"
 	)
 	default boolean exampleSetting()
 	{
-		return true;
+		return false;
 	}
 
-	// Add other configuration settings here
 }

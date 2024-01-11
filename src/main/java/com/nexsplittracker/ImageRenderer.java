@@ -1,4 +1,4 @@
-package com.nexsplittracker; // Adjust the package name as per your project structure
+package com.nexsplittracker;
 
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.Component;

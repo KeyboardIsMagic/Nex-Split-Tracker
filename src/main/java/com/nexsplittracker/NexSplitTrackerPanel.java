@@ -31,7 +31,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class NexSplitTrackerPanel extends PluginPanel {
+public class NexSplitTrackerPanel extends PluginPanel
+{
     private final ItemManager itemManager;
     private JTable dropTable;
     private DefaultTableModel tableModel;
@@ -91,7 +92,8 @@ public class NexSplitTrackerPanel extends PluginPanel {
 
     private void createPluginDirectory()
     {
-        if (!PLUGIN_DIR.exists()) {
+        if (!PLUGIN_DIR.exists())
+        {
             PLUGIN_DIR.mkdirs(); // Create directory if it doesn't exist
         }
     }
@@ -132,9 +134,9 @@ public class NexSplitTrackerPanel extends PluginPanel {
         }
         catch (IOException e)
         {
-            e.printStackTrace(); // Handle exceptions
+            e.printStackTrace();
         }
-        updatePrimaryTable(); // Populate primary table with loaded data
+        updatePrimaryTable();
         logger.info("Data loaded from file: " + filePath);
     }
 
@@ -150,14 +152,18 @@ public class NexSplitTrackerPanel extends PluginPanel {
     private Map<String, ItemAggregatedData> aggregateDataForPrimaryTable()
     {
         Map<String, ItemAggregatedData> aggregatedDataMap = new HashMap<>();
-        for (ItemData item : itemDataList) {
+        for (ItemData item : itemDataList)
+        {
             String itemName = item.getItemName();
             aggregatedDataMap.putIfAbsent(itemName, new ItemAggregatedData());
             ItemAggregatedData aggregatedData = aggregatedDataMap.get(itemName);
 
-            if (item.isReceived()) {
+            if (item.isReceived())
+            {
                 aggregatedData.increaseReceived();
-            } else {
+            }
+            else
+            {
                 aggregatedData.increaseSeen();
             }
             aggregatedData.increaseSplit(item.getSplitAmount());
@@ -166,13 +172,16 @@ public class NexSplitTrackerPanel extends PluginPanel {
     }
 
 
-    private void updatePrimaryTableWithAggregatedData(Map<String, ItemAggregatedData> aggregatedDataMap) {
-        for (Map.Entry<String, ItemAggregatedData> entry : aggregatedDataMap.entrySet()) {
+    private void updatePrimaryTableWithAggregatedData(Map<String, ItemAggregatedData> aggregatedDataMap)
+    {
+        for (Map.Entry<String, ItemAggregatedData> entry : aggregatedDataMap.entrySet())
+        {
             String itemName = entry.getKey();
             ItemAggregatedData aggregatedData = entry.getValue();
 
             int index = findRowIndexByItemName(itemName);
-            if (index != -1) {
+            if (index != -1)
+            {
                 int totalOccurrences = getTotalOccurrencesOfItem(itemName);
                 int seenCount = totalOccurrences - aggregatedData.getReceivedCount();
 
@@ -185,10 +194,13 @@ public class NexSplitTrackerPanel extends PluginPanel {
 
 
 
-    private int getTotalOccurrencesOfItem(String itemName) {
+    private int getTotalOccurrencesOfItem(String itemName)
+    {
         int count = 0;
-        for (ItemData item : itemDataList) {
-            if (item.getItemName().equals(itemName)) {
+        for (ItemData item : itemDataList)
+        {
+            if (item.getItemName().equals(itemName))
+            {
                 count++;
             }
         }
@@ -196,12 +208,14 @@ public class NexSplitTrackerPanel extends PluginPanel {
     }
 
 
-    private void initializeTable() {
+    private void initializeTable()
+    {
         String[] columnNames = {"Drop", "Received", "Seen", "Split"};
         tableModel = new DefaultTableModel(columnNames, 0)
         {
             @Override
-            public boolean isCellEditable(int row, int column) {
+            public boolean isCellEditable(int row, int column)
+            {
                 return false; // Make all rows non-editable
             }
         };
@@ -226,8 +240,8 @@ public class NexSplitTrackerPanel extends PluginPanel {
 
         add(dropTable, BorderLayout.CENTER);
 
-        tableModel.addRow(new Object[]{"Drop", "Received", "Seen", "Split"}); // Header row
-        tableModel.addRow(new Object[]{"Total", 0, 0, 0}); // Footer row for totals
+        tableModel.addRow(new Object[]{"Drop", "Received", "Seen", "Split"});
+        tableModel.addRow(new Object[]{"Total", 0, 0, 0});
     }
 
     private void initializeTableData()
@@ -243,7 +257,6 @@ public class NexSplitTrackerPanel extends PluginPanel {
 
     private void userInputPanel()
     {
-        // Main user input panel with GridBagLayout
         JPanel userInputPanel = new JPanel(new GridBagLayout());
         userInputPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
@@ -279,7 +292,7 @@ public class NexSplitTrackerPanel extends PluginPanel {
         // Split amount input
         gbc.gridx = 0;
         gbc.gridy = 2;
-        splitTextField = new JTextField(10); // Adjust the size as needed
+        splitTextField = new JTextField(10);
         userInputPanel.add(new JLabel("Split Amount:"), gbc);
         gbc.gridx = 1;
         userInputPanel.add(splitTextField, gbc);
@@ -287,7 +300,7 @@ public class NexSplitTrackerPanel extends PluginPanel {
         // Team size input
         gbc.gridx = 0;
         gbc.gridy = 3;
-        JTextField teamSizeField = new JTextField(10); // Adjust the size as needed
+        JTextField teamSizeField = new JTextField(10);
         userInputPanel.add(new JLabel("Team Size:"), gbc);
         gbc.gridx = 1;
         userInputPanel.add(teamSizeField, gbc);
@@ -329,7 +342,7 @@ public class NexSplitTrackerPanel extends PluginPanel {
         itemDetailsTableModel = new DefaultTableModel(detailColumnNames, 0);
         itemDetailsTable = new JTable(itemDetailsTableModel);
 
-        // Listener for delete functionality
+        // Listener for delete
         itemDetailsTable.addMouseListener(new MouseAdapter()
         {
             @Override
@@ -373,18 +386,20 @@ public class NexSplitTrackerPanel extends PluginPanel {
 
         // Add a JScrollPane for the secondary table
         JScrollPane itemDetailsScrollPane = new JScrollPane(itemDetailsTable);
-        itemDetailsScrollPane.setPreferredSize(new Dimension(400, 250)); // Set preferred size as needed
+        itemDetailsScrollPane.setPreferredSize(new Dimension(400, 250));
 
         // Add the JScrollPane to panel
         add(itemDetailsScrollPane, BorderLayout.SOUTH);
 
-        // Schedule the adjustment of column widths after the table is displayed
+        // Schedule the adjustment of column widths
         SwingUtilities.invokeLater(this::adjustColumnWidths);
     }
 
-    private void adjustColumnWidths() {
+    private void adjustColumnWidths()
+    {
         TableColumnModel columnModel = itemDetailsTable.getColumnModel();
-        if (columnModel.getColumnCount() == 4) { // Ensure the table has the expected number of columns
+        if (columnModel.getColumnCount() == 4)
+        {
             columnModel.getColumn(0).setPreferredWidth(50); // Width for 'Item' column
             columnModel.getColumn(1).setPreferredWidth(50); // Width for 'Split' column
             columnModel.getColumn(2).setPreferredWidth(100); // Width for 'Date' column
@@ -422,7 +437,8 @@ public class NexSplitTrackerPanel extends PluginPanel {
                 break;
             }
         }
-        if (toRemove != null) {
+        if (toRemove != null)
+        {
             itemDataList.remove(toRemove);
             updatePrimaryTable();
             String dataFilePath = new File(PLUGIN_DIR, "data.json").getAbsolutePath();
@@ -442,32 +458,38 @@ public class NexSplitTrackerPanel extends PluginPanel {
         return shortName; // Fallback, in case no match is found
     }
 
-    private void updatePrimaryTable() {
-        // Reset the primary table's data
+    private void updatePrimaryTable()
+    {
         resetPrimaryTableData();
 
         // Aggregate counts and splits for each unique item in itemDataList
         Map<String, ItemAggregatedData> aggregatedDataMap = new HashMap<>();
-        for (ItemData item : itemDataList) {
+        for (ItemData item : itemDataList)
+        {
             String itemName = item.getItemName();
             aggregatedDataMap.putIfAbsent(itemName, new ItemAggregatedData());
             ItemAggregatedData aggregatedData = aggregatedDataMap.get(itemName);
 
-            if (item.isReceived()) {
+            if (item.isReceived())
+            {
                 aggregatedData.increaseReceived();
-            } else {
+            }
+            else
+            {
                 aggregatedData.increaseSeen();
             }
             aggregatedData.increaseSplit(item.getSplitAmount());
         }
 
         // Update the primary table with aggregated data
-        for (Map.Entry<String, ItemAggregatedData> entry : aggregatedDataMap.entrySet()) {
+        for (Map.Entry<String, ItemAggregatedData> entry : aggregatedDataMap.entrySet())
+        {
             String itemName = entry.getKey();
             ItemAggregatedData aggregatedData = entry.getValue();
 
             int index = findRowIndexByItemName(itemName);
-            if (index != -1) {
+            if (index != -1)
+            {
                 tableModel.setValueAt(aggregatedData.getReceivedCount(), index, 1); // Update 'Received' count
                 tableModel.setValueAt(aggregatedData.getSeenCount(), index, 2); // Update 'Seen' count
                 tableModel.setValueAt(aggregatedData.getTotalSplit(), index, 3); // Update 'Split' value
@@ -484,27 +506,33 @@ public class NexSplitTrackerPanel extends PluginPanel {
         private int seenCount = 0;
         private double totalSplit = 0.0;
 
-        public void increaseReceived() {
+        public void increaseReceived()
+        {
             receivedCount++;
         }
 
-        public void increaseSeen() {
+        public void increaseSeen()
+        {
             seenCount++;
         }
 
-        public void increaseSplit(double split) {
+        public void increaseSplit(double split)
+        {
             totalSplit += split;
         }
 
-        public int getReceivedCount() {
+        public int getReceivedCount()
+        {
             return receivedCount;
         }
 
-        public int getSeenCount() {
+        public int getSeenCount()
+        {
             return seenCount;
         }
 
-        public double getTotalSplit() {
+        public double getTotalSplit()
+        {
             return totalSplit;
         }
     }
@@ -628,10 +656,13 @@ public class NexSplitTrackerPanel extends PluginPanel {
     }
 
 
-    private static class ImageRenderer extends DefaultTableCellRenderer {
+    private static class ImageRenderer extends DefaultTableCellRenderer
+    {
         @Override
-        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-            if (value instanceof ImageIcon) {
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column)
+        {
+            if (value instanceof ImageIcon)
+            {
                 JLabel label = new JLabel((ImageIcon) value);
                 label.setHorizontalAlignment(JLabel.CENTER);
                 return label;
@@ -639,26 +670,6 @@ public class NexSplitTrackerPanel extends PluginPanel {
             return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
         }
     }
-
-
-    class SplitCellRenderer extends DefaultTableCellRenderer {
-        @Override
-        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-            if (value instanceof Number) {
-                Number num = (Number) value;
-                if (num.doubleValue() == num.longValue()) {
-                    // If the number is an integer
-                    value = String.format("%d", num.longValue());
-                } else {
-                    // If the number is a decimal
-                    value = String.format("%.1f", num.doubleValue());
-                }
-            }
-            return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-        }
-    }
-
-
 
 }
 

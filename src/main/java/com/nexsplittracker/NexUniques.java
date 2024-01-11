@@ -3,7 +3,8 @@ package com.nexsplittracker;
 import net.runelite.api.ItemID;
 import java.util.Arrays;
 
-public enum NexUniques {
+public enum NexUniques
+{
     ZVAMBS("Zaryte Vambraces", "Vambs", ItemID.ZARYTE_VAMBRACES),
     NIHIL_HORN("Nihil Horn", "Horn", ItemID.NIHIL_HORN),
     TORVA_HELM("Torva Full Helm", "Helm", ItemID.TORVA_FULL_HELM),

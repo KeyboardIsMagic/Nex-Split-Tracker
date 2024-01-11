@@ -13,8 +13,7 @@ import java.awt.image.BufferedImage;
 
 @PluginDescriptor(
 		name = "Nex Split Tracker",
-		description = "Tracks splits for Nex drops",
-		tags = {"nex", "loot", "split", "tracker"}
+		description = "Track Nex uniques and GP split among teams"
 )
 public class NexSplitTrackerPlugin extends Plugin
 {
@@ -59,5 +58,4 @@ public class NexSplitTrackerPlugin extends Plugin
 		clientToolbar.removeNavigation(navButton);
 	}
 
-	// Add plugin logic
 }
