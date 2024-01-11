@@ -12,7 +12,6 @@ public class ColorScheme
     public static final Color LIGHT_BLACK = new Color(35,35,35);
     public static final Color Transp = new Color(35,35,35, 5);
 
-    // Private constructor to prevent instantiation
     private ColorScheme()
     {
         throw new IllegalStateException("Utility class");
