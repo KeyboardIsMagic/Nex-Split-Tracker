@@ -29,7 +29,3 @@ Secondary Table shows detailed information for each logged drop. Right-click to 
 
 ## Support
 For support, questions, or feature requests, please visit [GitHub Issues](https://github.com/KeyboardIsMagic/NexSplitTracker/issues) for the Nex Split Tracker repository.For major changes, please open an issue first to discuss what you would like to change.
-
-## License
-
-[MIT](https://choosealicense.com/licenses/mit/)
