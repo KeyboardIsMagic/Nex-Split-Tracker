@@ -14,7 +14,7 @@ public interface NexSplitTrackerConfig extends Config
 			name = "Increase Drop Rate",
 			description = "Might do something if you really believe"
 	)
-	default boolean exampleSetting()
+	default boolean dropRateBoost()
 	{
 		return false;
 	}
