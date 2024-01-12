@@ -7,7 +7,6 @@ import net.runelite.client.config.ConfigItem;
 @ConfigGroup("nexsplittracker")
 public interface NexSplitTrackerConfig extends Config
 {
-	// Example configuration item
 	@ConfigItem(
 			keyName = "increaseDropRate",
 			name = "Increase Drop Rate",
