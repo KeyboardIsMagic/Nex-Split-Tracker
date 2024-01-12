@@ -27,17 +27,18 @@ public class NexSplitTrackerPlugin extends Plugin
 	@Inject
 	private Gson gson;
 
+	@Inject
+	private ItemManager itemManager;
+
+
 	private NexSplitTrackerPanel panel;
 	private NavigationButton navButton;
 
-	@Provides
+    @Provides
 	NexSplitTrackerConfig getConfig(ConfigManager configManager)
 	{
 		return configManager.getConfig(NexSplitTrackerConfig.class);
 	}
-
-	@Inject
-	private ItemManager itemManager;
 
 	@Override
 	protected void startUp() throws Exception

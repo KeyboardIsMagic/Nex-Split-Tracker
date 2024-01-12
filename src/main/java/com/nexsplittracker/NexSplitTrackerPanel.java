@@ -1,7 +1,6 @@
 package com.nexsplittracker;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import net.runelite.client.RuneLite;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.ui.PluginPanel;
@@ -103,7 +102,6 @@ public class NexSplitTrackerPanel extends PluginPanel
 
     private void saveDataToFile(String filePath)
     {
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
         try
         {
             FileWriter writer = new FileWriter(filePath);
