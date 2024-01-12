@@ -1,7 +1,5 @@
 package com.nexsplittracker;
 
-import java.time.LocalDate;
-
 class ItemData
 {
     private String itemName;
@@ -47,31 +45,6 @@ class ItemData
         return isReceived;
     }
 
-
-    public void setItemName(String itemName)
-    {
-        this.itemName = itemName;
-    }
-
-    public void setSplitAmount(double splitAmount)
-    {
-        this.splitAmount = splitAmount;
-    }
-
-    public void setDate(String date)
-    {
-        this.date = date;
-    }
-
-    public void setTeamSize(int teamSize)
-    {
-        this.teamSize = teamSize;
-    }
-
-    public void setReceived(boolean received)
-    {
-        isReceived = received;
-    }
 
 
     @Override
