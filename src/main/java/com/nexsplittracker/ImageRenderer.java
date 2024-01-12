@@ -20,5 +20,3 @@ public class ImageRenderer extends DefaultTableCellRenderer
         return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
     }
 }
-
-

@@ -41,15 +41,17 @@ public class NexSplitTrackerPanel extends PluginPanel
     private JComboBox<String> itemComboBox;
     private JTextField splitTextField;
     private JCheckBox receivedCheckBox;
+    private final Gson gson;
 
     private final List<ItemData> itemDataList = new ArrayList<>();
     private static final Logger logger = Logger.getLogger(NexSplitTrackerPanel.class.getName());
     private static final File PLUGIN_DIR = new File(RuneLite.RUNELITE_DIR, "NexSplitTracker");
 
-    public NexSplitTrackerPanel(ItemManager itemManager)
+    public NexSplitTrackerPanel(ItemManager itemManager, Gson gson)
     {
         super();
         this.itemManager = itemManager;
+        this.gson = gson;
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
 
@@ -117,10 +119,8 @@ public class NexSplitTrackerPanel extends PluginPanel
     }
 
 
-
     private void loadDataFromFile(String filePath)
     {
-        Gson gson = new Gson();
         try
         {
             Reader reader = new FileReader(filePath);
@@ -274,6 +274,7 @@ public class NexSplitTrackerPanel extends PluginPanel
         userInputPanel.add(new JLabel("Select Item:"), gbc);
         gbc.gridx = 1;
         userInputPanel.add(itemComboBox, gbc);
+        itemComboBox.setToolTipText("Select the item you want to add");
 
         // 'Received by Me' checkbox
         gbc.anchor = GridBagConstraints.WEST;
@@ -288,6 +289,7 @@ public class NexSplitTrackerPanel extends PluginPanel
         gbc.ipadx = 60; // Additional padding in the x-direction
         receivedCheckBox = new JCheckBox();
         userInputPanel.add(receivedCheckBox, gbc);
+        receivedCheckBox.setToolTipText("Check this box if you received the drop in your name");
 
         // Split amount input
         gbc.gridx = 0;
@@ -296,6 +298,7 @@ public class NexSplitTrackerPanel extends PluginPanel
         userInputPanel.add(new JLabel("Split Amount:"), gbc);
         gbc.gridx = 1;
         userInputPanel.add(splitTextField, gbc);
+        splitTextField.setToolTipText("Enter the split amount in Millions. Example:'50' or '65.5'");
 
         // Team size input
         gbc.gridx = 0;
@@ -304,12 +307,14 @@ public class NexSplitTrackerPanel extends PluginPanel
         userInputPanel.add(new JLabel("Team Size:"), gbc);
         gbc.gridx = 1;
         userInputPanel.add(teamSizeField, gbc);
+        teamSizeField.setToolTipText("Enter in the team size");
 
         // 'Add Drop' button
         gbc.gridx = 0;
         gbc.gridy = 4;
         gbc.gridwidth = 2;
         JButton addButton = new JButton("Add Drop");
+        addButton.setToolTipText("Click to add a new drop");
 
         addButton.addActionListener(e ->
         {
@@ -338,9 +343,19 @@ public class NexSplitTrackerPanel extends PluginPanel
 
     private void initializeSecondaryTable()
     {
-        String[] detailColumnNames = {"Item", "Split", "Date", "Team"};
+        String[] detailColumnNames = {"Item", "Split", "Date", "Team", "Drop"};
         itemDetailsTableModel = new DefaultTableModel(detailColumnNames, 0);
         itemDetailsTable = new JTable(itemDetailsTableModel);
+        itemDetailsTable.setTableHeader(new ToolTipHeader(itemDetailsTable.getColumnModel()));
+
+        // Center cell text
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+        // Set the renderer to each column
+        for (int i = 0; i < itemDetailsTableModel.getColumnCount(); i++)
+        {
+            itemDetailsTable.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+        }
 
         // Listener for delete
         itemDetailsTable.addMouseListener(new MouseAdapter()
@@ -398,12 +413,13 @@ public class NexSplitTrackerPanel extends PluginPanel
     private void adjustColumnWidths()
     {
         TableColumnModel columnModel = itemDetailsTable.getColumnModel();
-        if (columnModel.getColumnCount() == 4)
+        if (columnModel.getColumnCount() == 5)
         {
             columnModel.getColumn(0).setPreferredWidth(50); // Width for 'Item' column
             columnModel.getColumn(1).setPreferredWidth(50); // Width for 'Split' column
             columnModel.getColumn(2).setPreferredWidth(100); // Width for 'Date' column
             columnModel.getColumn(3).setPreferredWidth(40); // Width for 'Team Size' column
+            columnModel.getColumn(4).setPreferredWidth(40); // Width for 'Received or Seen'
         }
     }
 
@@ -574,9 +590,11 @@ public class NexSplitTrackerPanel extends PluginPanel
             tableModel.setValueAt(currentSeen, index, 2);
             tableModel.setValueAt(currentSplit, index, 3);
 
+            String formattedDate = LocalDate.now().format(DateTimeFormatter.ofPattern("MM/dd/yy"));
+
             // Add to secondary table
             LocalDate currentDate = LocalDate.now();
-            ItemData newItem = new ItemData(itemName, splitAmount, currentDate, teamSize, isReceived);
+            ItemData newItem = new ItemData(itemName, splitAmount, formattedDate, teamSize, isReceived);
             itemDataList.add(newItem);
             updateSecondaryTable();
         }
@@ -611,17 +629,22 @@ public class NexSplitTrackerPanel extends PluginPanel
         {
             JButton removeButton = new JButton("Remove");
             removeButton.addActionListener(e -> removeItem(item));
-            String formattedDate = item.getDate().format(formatter);
+
+            LocalDate date = LocalDate.parse(item.getDate(), formatter);
+            String formattedDate = date.format(DateTimeFormatter.ofPattern("MM/dd/yy"));
+            String drop = item.isReceived() ? "R" : "S";
 
             itemDetailsTableModel.addRow(new Object[]{
                     item.getItemName(),
                     item.getSplitAmount(),
                     formattedDate,
                     item.getTeamSize(),
+                    drop,
                     removeButton
             });
         }
     }
+
 
     private void removeItem(ItemData item)
     {
@@ -670,6 +693,7 @@ public class NexSplitTrackerPanel extends PluginPanel
             return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
         }
     }
+
 
 }
 

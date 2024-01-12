@@ -4,15 +4,15 @@ import java.time.LocalDate;
 
 class ItemData
 {
-    // Fields
     private String itemName;
     private double splitAmount;
-    private LocalDate date;
+    private String date;
     private int teamSize;
     private boolean isReceived;
 
 
-    public ItemData(String itemName, double splitAmount, LocalDate date, int teamSize, boolean isReceived)
+
+    public ItemData(String itemName, double splitAmount, String date, int teamSize, boolean isReceived)
     {
         this.itemName = itemName;
         this.splitAmount = splitAmount;
@@ -32,7 +32,7 @@ class ItemData
         return splitAmount;
     }
 
-    public LocalDate getDate()
+    public String getDate()
     {
         return date;
     }
@@ -58,7 +58,7 @@ class ItemData
         this.splitAmount = splitAmount;
     }
 
-    public void setDate(LocalDate date)
+    public void setDate(String date)
     {
         this.date = date;
     }

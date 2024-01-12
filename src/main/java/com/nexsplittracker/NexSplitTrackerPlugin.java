@@ -1,5 +1,6 @@
 package com.nexsplittracker;
 
+import com.google.gson.Gson;
 import com.google.inject.Provides;
 import javax.inject.Inject;
 import net.runelite.client.config.ConfigManager;
@@ -23,6 +24,9 @@ public class NexSplitTrackerPlugin extends Plugin
 	@Inject
 	private NexSplitTrackerConfig config;
 
+	@Inject
+	private Gson gson;
+
 	private NexSplitTrackerPanel panel;
 	private NavigationButton navButton;
 
@@ -38,7 +42,7 @@ public class NexSplitTrackerPlugin extends Plugin
 	@Override
 	protected void startUp() throws Exception
 	{
-		panel = new NexSplitTrackerPanel(itemManager);
+		panel = new NexSplitTrackerPanel(itemManager, gson);
 
 		final BufferedImage icon = ImageUtil.loadImageResource(getClass(), "/nex16v2.png");
 
