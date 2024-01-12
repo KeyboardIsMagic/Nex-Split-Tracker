@@ -50,7 +50,7 @@ public class NexSplitTrackerPlugin extends Plugin
 		navButton = NavigationButton.builder()
 				.tooltip("Nex Split Tracker")
 				.icon(icon)
-				.priority(5)
+				.priority(6)
 				.panel(panel)
 				.build();
 
