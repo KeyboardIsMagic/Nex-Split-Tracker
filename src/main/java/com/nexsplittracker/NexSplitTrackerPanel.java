@@ -38,7 +38,7 @@ public class NexSplitTrackerPanel extends PluginPanel
     private JTable itemDetailsTable;
     private DefaultTableModel itemDetailsTableModel;
     private JComboBox<String> itemComboBox;
-    private JTextField splitTextField;
+    private CustomTextField splitTextField;
     private JCheckBox receivedCheckBox;
     private final Gson gson;
 
@@ -292,7 +292,8 @@ public class NexSplitTrackerPanel extends PluginPanel
         // Split amount input
         gbc.gridx = 0;
         gbc.gridy = 2;
-        splitTextField = new JTextField(10);
+        splitTextField = new CustomTextField(10);
+        splitTextField.setSuffix("M");
         userInputPanel.add(new JLabel("Split Amount:"), gbc);
         gbc.gridx = 1;
         userInputPanel.add(splitTextField, gbc);
