@@ -5,7 +5,7 @@ A custom RuneLite plugin that helps you manage parties, display player verificat
 
 ![Title](src/main/resources/plugin.JPG)
 ![Title](src/main/resources/config.JPG)
-![Title](src/main/resources/Ranks.JPG)
+![Title](src/main/resources/Ranks.png)
 
 ---
 
