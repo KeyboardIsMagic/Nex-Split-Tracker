@@ -118,10 +118,10 @@ public class HttpUtil {
                 while ((inputLine = in.readLine()) != null) {
                     response.append(inputLine);
                 }
-                System.out.println("Response: " + response.toString());
+                //System.out.println("Response: " + response.toString());
             }
         } else {
-            System.out.println("Request failed with response code: " + responseCode);
+            //System.out.println("Request failed with response code: " + responseCode);
         }
         connection.disconnect();
     }

@@ -32,7 +32,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 
-@PluginDescriptor(name = "1Nex Splits Kodai")
+@PluginDescriptor(name = "OSRS Splits - The Kodai")
 public class OsrsSplitPlugin extends Plugin
 {
 	@Getter
@@ -101,7 +101,7 @@ public class OsrsSplitPlugin extends Plugin
 		// Create panel button
 		final BufferedImage icon = ImageUtil.loadImageResource(getClass(), "/tempIcon.png");
 		navButton = NavigationButton.builder()
-				.tooltip("Nex Splits Kodai")
+				.tooltip("OSRS Splits - The Kodai")
 				.icon(icon)
 				.priority(1)
 				.panel(panel)
@@ -119,7 +119,7 @@ public class OsrsSplitPlugin extends Plugin
 		if (socketIoClient != null)
 		{
 			socketIoClient.disconnect();
-			System.out.println("Socket.IO client disconnected during plugin shutdown.");
+			//System.out.println("Socket.IO client disconnected during plugin shutdown.");
 		}
 	}
 
@@ -137,7 +137,7 @@ public class OsrsSplitPlugin extends Plugin
 			if (config.saveApiKey())
 			{
 				saveApiKeyToFile(config.apiKey());
-				System.out.println("API key saved via configuration.");
+				//System.out.println("API key saved via configuration.");
 			}
 		}
 	}
@@ -151,7 +151,7 @@ public class OsrsSplitPlugin extends Plugin
 
 		if (newWorld < 1)
 		{
-			System.out.println("Skipping world update because newWorld = " + newWorld);
+			//System.out.println("Skipping world update because newWorld = " + newWorld);
 			return;
 		}
 
@@ -173,7 +173,7 @@ public class OsrsSplitPlugin extends Plugin
 	{
 		if (apiKey == null || apiKey.isEmpty())
 		{
-			System.out.println("API key is empty. User will not be verified.");
+			//System.out.println("API key is empty. User will not be verified.");
 			return;
 		}
 

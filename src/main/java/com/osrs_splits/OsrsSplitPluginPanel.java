@@ -53,8 +53,8 @@ public class OsrsSplitPluginPanel extends PluginPanel
     private Instant lastScreenshotTime = Instant.EPOCH; //FIXME
 
     private final OsrsSplitPlugin plugin;
-    private static final int TARGET_NPC_ID = 3031; // goblin
-    private static final int[] SPECIAL_ITEM_IDS = {526, 26370, 26372, 26374, 26376, 26378, 26380}; // Added Unique Items (REMOVE BONES)**** FIXME
+    private static final int TARGET_NPC_ID = 11282; // goblin 3031, 11282(loot phase) nex
+    private static final int[] SPECIAL_ITEM_IDS = {26370, 26372, 26374, 26376, 26378, 26380}; // Added Unique Items (REMOVE BONES)**** (526) bones
 
     public OsrsSplitPluginPanel(OsrsSplitPlugin plugin)
     {
@@ -572,7 +572,7 @@ public class OsrsSplitPluginPanel extends PluginPanel
                 @Override
                 protected void done()
                 {
-                    System.out.println("Sent toggle-confirm-split to server. Waiting for broadcast update.");
+                    //System.out.println("Sent toggle-confirm-split to server. Waiting for broadcast update.");
                 }
             };
             worker.execute();
@@ -667,7 +667,7 @@ public class OsrsSplitPluginPanel extends PluginPanel
                     screenshotFile
             );
 
-            System.out.println("Screenshot posted to Discord via on-drop endpoint.");
+            //System.out.println("Screenshot posted to Discord via on-drop endpoint.");
 
         }
         catch (Exception e)
@@ -704,7 +704,7 @@ public class OsrsSplitPluginPanel extends PluginPanel
 
             if (!plugin.getPartyManager().isInParty(plugin.getClient().getLocalPlayer().getName()))
             {
-                System.out.println("Player is not in a party. No screenshot will be taken.");
+                //System.out.println("Player is not in a party. No screenshot will be taken.");
                 return;
             }
 
@@ -734,7 +734,7 @@ public class OsrsSplitPluginPanel extends PluginPanel
                             SwingUtilities.invokeLater(() ->
                                     showScreenshotNotification("Screenshot taken and uploaded to Discord!")
                             );
-                            System.out.println("Screenshot taken and uploaded after delay.");
+                            //System.out.println("Screenshot taken and uploaded after delay.");
                         }
                         catch (InterruptedException | IOException | AWTException e)
                         {
