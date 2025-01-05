@@ -3,8 +3,8 @@
 A custom RuneLite plugin that helps you manage parties, display player verification, and capture in-game screenshots—enhancing trust and transparency within the **[OSRS Splits](https://discord.gg/osrssplits)**
  and **RuneWatch** communities.
 
-![Title](src/main/resources/plugin.JPG)
-![Title](src/main/resources/config.JPG)
+![Title](src/main/resources/plugin.png)
+![Title](src/main/resources/config.png)
 ![Title](src/main/resources/Ranks.png)
 
 ---
