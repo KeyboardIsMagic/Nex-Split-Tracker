@@ -27,6 +27,7 @@ dependencies {
 	implementation 'org.json:json:20200518'
 	implementation 'io.socket:socket.io-client:2.0.1'
 
+
 }
 
 group = 'com.example'
