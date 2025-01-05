@@ -38,13 +38,13 @@ public class PartyManager
     {
         if (this.leader != null)
         {
-            //System.out.println("A local party is already set. Clearing members for new party...");
+
             clearMembers();
         }
 
         if (leaderName == null || leaderName.isEmpty() || passphrase == null || passphrase.isEmpty())
         {
-            //System.out.println("Cannot create a local party without valid leader or passphrase.");
+
             return false;
         }
 
@@ -66,7 +66,7 @@ public class PartyManager
         members.clear();
         members.put(leaderName, pLeader);
 
-        //System.out.println("Party created locally with leader=" + leaderName + " passphrase=" + passphrase);
+
         return true;
     }
 
@@ -74,14 +74,14 @@ public class PartyManager
     {
         if (passphrase == null || newMembers == null)
         {
-            System.err.println("Invalid update: passphrase or members is null. Skipping.");
+
             return;
         }
         this.currentPartyPassphrase = passphrase;
         this.members.clear();
         this.members.putAll(newMembers);
 
-        //System.out.println("Updated local party: " + passphrase + " with " + newMembers.size() + " members.");
+
     }
 
 
@@ -117,7 +117,7 @@ public class PartyManager
     public void clearMembers()
     {
         members.clear();
-        //System.out.println("All members have been cleared from the party.");
+
     }
 
 
@@ -125,7 +125,7 @@ public class PartyManager
     public void synchronizePartyWithRedis()
     {
 
-        //System.out.println("synchronizePartyWithRedis => passphrase=" + passphrase);
+
         // Build full party data
         JSONObject payload = new JSONObject();
         payload.put("passphrase", passphrase);
@@ -134,7 +134,7 @@ public class PartyManager
         JSONArray arr = new JSONArray();
         for (PlayerInfo m : members.values())
         {
-            //System.out.println(" - " + m.getName() + " world=" + m.getWorld() + " rank=" + m.getRank());
+
             JSONObject o = new JSONObject();
             o.put("name", m.getName());
             o.put("world", m.getWorld());
@@ -157,13 +157,13 @@ public class PartyManager
     {
         if (leader == null || leader.isEmpty())
         {
-            //System.out.println("Leader cannot be null or empty.");
+
             this.leader = null;
         }
         else
         {
             this.leader = leader;
-            //System.out.println("Leader updated to: " + leader);
+
         }
     }
 }

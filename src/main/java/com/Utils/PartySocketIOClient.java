@@ -32,7 +32,7 @@ public class PartySocketIOClient
             socket = IO.socket(serverUrl);
 
             socket.on(Socket.EVENT_CONNECT, args -> {
-                System.out.println("Socket.IO Connected to the server.");
+
             });
 
             // Listen for party_update
@@ -40,7 +40,7 @@ public class PartySocketIOClient
                 try
                 {
                     JSONObject partyData = new JSONObject(args[0].toString());
-                    //System.out.println("Party Update Received: " + partyData);
+
                     processPartyUpdate(partyData);
                     socket.emit("ack_party_update", "Party update processed successfully");
                 }
@@ -57,7 +57,7 @@ public class PartySocketIOClient
                     {
                         JSONObject obj = new JSONObject(args[0].toString());
                         String msg = obj.optString("message", "Party join error");
-                        //System.out.println("Received 'joinPartyError': " + obj);
+
 
                         plugin.getPartyManager().setCurrentPartyPassphrase(null);
 
@@ -81,7 +81,7 @@ public class PartySocketIOClient
                         JSONObject obj = new JSONObject(args[0].toString());
                         String status = obj.optString("status", "");
                         String message = obj.optString("message", "");
-                        //System.out.println("Received 'response': " + obj);
+
 
                         OsrsSplitPluginPanel panel = plugin.getPanel();
 
@@ -97,7 +97,7 @@ public class PartySocketIOClient
                                 plugin.getPartyManager().setCurrentPartyPassphrase(passphrase);
                                 // create local placeholder
                                 plugin.getPartyManager().createParty(localPlayer, passphrase);
-                                //System.out.println("Party created locally with leader=" + localPlayer + " passphrase=" + passphrase);
+
 
                                 // *** Force server to broadcast final party data
                                 JSONObject fetchPayload = new JSONObject();
@@ -124,7 +124,7 @@ public class PartySocketIOClient
                             panel.getLeavePartyButton().setVisible(false);
                             panel.getScreenshotButton().setVisible(false);
 
-                            System.out.println("Create/Join party error -> revert local. Reason: " + message);
+
                         }
 
                         lastAction = null;
@@ -137,10 +137,6 @@ public class PartySocketIOClient
 
 
 
-            // Connect logs
-            socket.on("connect_error", args -> System.err.println("Socket.IO Connection Error: " + args[0]));
-            socket.on("connect_timeout", args -> System.err.println("Socket.IO Connection Timeout."));
-            socket.on(Socket.EVENT_DISCONNECT, args -> System.out.println("Socket.IO Disconnected."));
 
             socket.connect();
         }
@@ -158,7 +154,7 @@ public class PartySocketIOClient
     }
 
     public void requestPartyUpdate(JSONObject payload) {
-        //System.out.println("Sending request_party_update with payload: " + payload);
+
         socket.emit("request_party_update", payload);
     }
 
@@ -175,7 +171,7 @@ public class PartySocketIOClient
 
         plugin.getPanel().setLastProposedPassphrase(passphrase);
 
-        //System.out.println("Creating party with payload: " + payload);
+
         socket.emit("create-party", payload);
     }
 
@@ -192,7 +188,7 @@ public class PartySocketIOClient
 
         plugin.getPanel().setLastProposedPassphrase(passphrase);
 
-        //System.out.println("Sending join-party with payload: " + payload);
+
         socket.emit("join-party", payload);
     }
 
@@ -204,7 +200,7 @@ public class PartySocketIOClient
         payload.put("passphrase", passphrase);
         payload.put("rsn", rsn);
 
-        //System.out.println("Sending leave-party event: " + payload.toString());
+
         socket.emit("leave-party", payload);
     }
 
@@ -212,9 +208,9 @@ public class PartySocketIOClient
     public void disconnect() {
         if (socket != null && socket.connected()) {
             socket.disconnect();
-            //System.out.println("Socket.IO client disconnected.");
+
         } else {
-            //System.out.println("Socket.IO client is already disconnected.");
+
         }
     }
 
@@ -235,18 +231,14 @@ public class PartySocketIOClient
                 // If incoming passphrase doesn't match our local passphrase, ignore
                 if (!passphrase.equals(localPassphrase))
                 {
-//                    System.out.println(
-//                            "Ignoring update for mismatched passphrase: "
-//                                    + passphrase
-//                                    + " (local is " + localPassphrase + ")"
-//                    );
+
                     return;
                 }
 
                 // If "party_disband" => we disband the local party
                 if ("party_disband".equals(action))
                 {
-                    //System.out.println("Received party_disband for " + passphrase);
+
                     plugin.getPartyManager().clearMembers();
                     plugin.getPartyManager().setCurrentPartyPassphrase(null);
                     plugin.getPartyManager().setLeader(null);
@@ -283,7 +275,7 @@ public class PartySocketIOClient
                 // If empty => disband
                 if (updatedMembers.isEmpty())
                 {
-                    //System.out.println("No members in party " + passphrase + ". Clearing local data.");
+
                     plugin.getPartyManager().clearMembers();
                     plugin.getPartyManager().setCurrentPartyPassphrase(null);
                     plugin.getPartyManager().setLeader(null);
@@ -306,9 +298,7 @@ public class PartySocketIOClient
 
                 if (localPlayer != null && !updatedMembers.containsKey(localPlayer))
                 {
-//                    System.out.println(
-//                            "Local player " + localPlayer + " is not in updated list. Clearing local data..."
-//                    );
+
                     plugin.getPartyManager().clearMembers();
                     plugin.getPartyManager().setCurrentPartyPassphrase(null);
                     plugin.getPartyManager().setLeader(null);
@@ -328,9 +318,6 @@ public class PartySocketIOClient
                 plugin.getPartyManager().updateCurrentParty(passphrase, updatedMembers);
                 plugin.getPartyManager().setLeader(leader);
 
-//                System.out.println("Updated local party: " + passphrase
-//                        + " with " + updatedMembers.size() + " members.");
-//                System.out.println("Leader updated to: " + leader);
 
                 // Hide “Loading…” text, if any
                 plugin.getPanel().getStatusLabel().setText("");
@@ -355,7 +342,7 @@ public class PartySocketIOClient
 
     public void send(String event, String payload) {
         socket.emit(event, payload);
-        //System.out.println("Sent event [" + event + "] with payload: " + payload);
+
     }
 
     public void sendPartyUpdate(String passphrase, Map<String, PlayerInfo> members) {
@@ -377,7 +364,7 @@ public class PartySocketIOClient
         payload.put("members", memberArray);
 
         socket.emit("party_update", payload.toString());
-        //System.out.println("Sent party_update event: " + payload);
+
     }
 
 
@@ -389,7 +376,7 @@ public class PartySocketIOClient
 
         // Emit the event
         socket.emit("party_disband", payload.toString());
-        //System.out.println("Sent party_disband event: " + payload);
+
     }
 
 

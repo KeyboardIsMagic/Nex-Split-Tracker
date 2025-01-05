@@ -572,7 +572,7 @@ public class OsrsSplitPluginPanel extends PluginPanel
                 @Override
                 protected void done()
                 {
-                    //System.out.println("Sent toggle-confirm-split to server. Waiting for broadcast update.");
+
                 }
             };
             worker.execute();
@@ -619,7 +619,7 @@ public class OsrsSplitPluginPanel extends PluginPanel
         }
         else
         {
-            System.out.println("Error: Unable to capture RuneLite client window.");
+
             return null;
         }
     }
@@ -639,7 +639,7 @@ public class OsrsSplitPluginPanel extends PluginPanel
         File screenshotFile = new File(screenshotDir, filename);
         ImageIO.write(screenshot, "png", screenshotFile);
 
-        System.out.println("Screenshot saved at: " + screenshotFile.getAbsolutePath());
+
         return screenshotFile;
     }
 
@@ -667,13 +667,13 @@ public class OsrsSplitPluginPanel extends PluginPanel
                     screenshotFile
             );
 
-            //System.out.println("Screenshot posted to Discord via on-drop endpoint.");
+
 
         }
         catch (Exception e)
         {
             e.printStackTrace();
-            System.out.println("Failed to post screenshot to Discord: " + e.getMessage());
+
         }
     }
 
@@ -700,20 +700,20 @@ public class OsrsSplitPluginPanel extends PluginPanel
         NPC npc = event.getNpc();
         if (npc != null && npc.getId() == TARGET_NPC_ID)
         {
-            System.out.println("Loot received from NPC ID: " + npc.getId());
+
 
             if (!plugin.getPartyManager().isInParty(plugin.getClient().getLocalPlayer().getName()))
             {
-                //System.out.println("Player is not in a party. No screenshot will be taken.");
+
                 return;
             }
 
             for (ItemStack itemStack : event.getItems())
             {
-                System.out.println("Item received: " + itemStack.getId());
+
                 if (isSpecialItem(itemStack.getId()))
                 {
-                    System.out.println("Unique item drop detected from target NPC!");
+
                     new Thread(() -> {
                         try
                         {
@@ -734,7 +734,7 @@ public class OsrsSplitPluginPanel extends PluginPanel
                             SwingUtilities.invokeLater(() ->
                                     showScreenshotNotification("Screenshot taken and uploaded to Discord!")
                             );
-                            //System.out.println("Screenshot taken and uploaded after delay.");
+
                         }
                         catch (InterruptedException | IOException | AWTException e)
                         {

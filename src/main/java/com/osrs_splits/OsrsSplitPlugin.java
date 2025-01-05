@@ -80,12 +80,12 @@ public class OsrsSplitPlugin extends Plugin
 		{
 			String socketIoUri = "https://osrssplits.xyz";
 			socketIoClient = new PartySocketIOClient(socketIoUri, this);
-			System.out.println("Socket.IO client connected successfully.");
+
 		}
 		catch (Exception e)
 		{
 			e.printStackTrace();
-			System.err.println("Failed to initialize Socket.IO client during startup.");
+
 		}
 
 		eventBus.register(this);
@@ -119,7 +119,7 @@ public class OsrsSplitPlugin extends Plugin
 		if (socketIoClient != null)
 		{
 			socketIoClient.disconnect();
-			//System.out.println("Socket.IO client disconnected during plugin shutdown.");
+
 		}
 	}
 
@@ -137,7 +137,7 @@ public class OsrsSplitPlugin extends Plugin
 			if (config.saveApiKey())
 			{
 				saveApiKeyToFile(config.apiKey());
-				//System.out.println("API key saved via configuration.");
+
 			}
 		}
 	}
@@ -147,11 +147,11 @@ public class OsrsSplitPlugin extends Plugin
 	public void onWorldChanged(WorldChanged event)
 	{
 		int newWorld = client.getWorld();
-		//System.out.println("DEBUG: onWorldChanged fired => newWorld = " + newWorld);
+
 
 		if (newWorld < 1)
 		{
-			//System.out.println("Skipping world update because newWorld = " + newWorld);
+
 			return;
 		}
 
@@ -159,13 +159,13 @@ public class OsrsSplitPlugin extends Plugin
 		String localPlayer = client.getLocalPlayer().getName();
 		if (!partyManager.isInParty(localPlayer))
 		{
-			//System.out.println("Not in a party, so skipping world update for " + localPlayer);
+
 			return;
 		}
 
 		// If we’re in a party => push new world to PartyManager
 		partyManager.updatePlayerData(localPlayer, newWorld);
-		//System.out.println("Updated " + localPlayer + " to newWorld=" + newWorld + "; Syncing to server...");
+
 	}
 
 
@@ -173,7 +173,7 @@ public class OsrsSplitPlugin extends Plugin
 	{
 		if (apiKey == null || apiKey.isEmpty())
 		{
-			//System.out.println("API key is empty. User will not be verified.");
+
 			return;
 		}
 
@@ -188,11 +188,11 @@ public class OsrsSplitPlugin extends Plugin
 		try (FileWriter writer = new FileWriter(apiKeyFile))
 		{
 			writer.write(apiKey);
-			System.out.println("API key saved successfully to " + apiKeyFile.getAbsolutePath());
+
 		}
 		catch (IOException e)
 		{
-			System.err.println("Error saving API key: " + e.getMessage());
+
 		}
 	}
 
