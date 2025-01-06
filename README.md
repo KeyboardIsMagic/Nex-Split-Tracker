@@ -1,6 +1,6 @@
 # OSRS Splits - The Kodai
 ![Title](src/main/resources/LootTracker.png)
-![Title](src/main/resources/MartyManager.png)
+![Title](src/main/resources/PartyManager.png)
 ![Title](src/main/resources/PluginConfig.png)
 ![Title](src/main/resources/Ranks.png)
 
