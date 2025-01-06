@@ -5,7 +5,7 @@ import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
 import net.runelite.client.config.ConfigSection;
 
-@ConfigGroup("OsrsSplit")
+@ConfigGroup("nexsplittracker")
 public interface OsrsSplitsConfig extends Config
 {
 	@ConfigSection(
@@ -39,9 +39,18 @@ public interface OsrsSplitsConfig extends Config
 	@ConfigItem(
 			keyName = "increaseDropRate",
 			name = "Increase Drop Rate",
-			description = "Might do something if you really believe"
+			description = "Might do something if you really believe",
+			position = 3
 	)
 	default boolean dropRateBoost() {
 		return false;
 	}
+
+	@ConfigItem(
+			keyName = "enableExternalSharing",
+			name = "Enable External Sharing",
+			description = "<html><b>WARNING:</b> Enabling this will send your data (screenshots, party info) to an external server. Use at your own risk.</html>",
+			position = 4
+	)
+	default boolean enableExternalSharing() { return false; }
 }

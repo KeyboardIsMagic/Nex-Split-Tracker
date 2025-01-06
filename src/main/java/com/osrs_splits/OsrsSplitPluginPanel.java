@@ -600,19 +600,35 @@ public class OsrsSplitPluginPanel extends PluginPanel
 
     private void showScreenshotNotification(String s)
     {
-        JOptionPane.showMessageDialog(this, "Screenshot taken and saved!", "Screenshot", JOptionPane.INFORMATION_MESSAGE);
+        if(plugin.getConfig().enableExternalSharing())
+        {
+            JOptionPane.showMessageDialog(this, "Screenshot taken and Uploaded to Discord!", "Screenshot", JOptionPane.INFORMATION_MESSAGE);
+        }
+        else
+        {
+            JOptionPane.showMessageDialog(this, "Sharing disabled in config, screenshot saved in screenshot folder!", "Screenshot", JOptionPane.INFORMATION_MESSAGE);
+        }
     }
 
     private void screenshotAndUpload()
     {
-        try {
+        try
+        {
             BufferedImage screenshot = captureScreenshot();
             File screenshotFile = saveScreenshot(screenshot);
-            uploadToDiscord(screenshotFile);
-        } catch (IOException | AWTException e) {
+
+            if (plugin.getConfig().enableExternalSharing())
+            {
+                uploadToDiscord(screenshotFile);
+            }
+
+        }
+        catch (IOException | AWTException e)
+        {
             e.printStackTrace();
         }
     }
+
 
     private BufferedImage captureScreenshot() throws AWTException
     {
@@ -651,6 +667,12 @@ public class OsrsSplitPluginPanel extends PluginPanel
 
     private void uploadToDiscord(File screenshotFile)
     {
+
+        if (!plugin.getConfig().enableExternalSharing())
+        {
+            return;
+        }
+
         try
         {
             // get list of current party members
@@ -674,13 +696,10 @@ public class OsrsSplitPluginPanel extends PluginPanel
                     screenshotFile
             );
 
-
-
         }
         catch (Exception e)
         {
             e.printStackTrace();
-
         }
     }
 
@@ -730,25 +749,33 @@ public class OsrsSplitPluginPanel extends PluginPanel
                             BufferedImage screenshot = captureScreenshot();
                             File screenshotFile = saveScreenshot(screenshot);
 
-                            java.util.List<String> partyList = new ArrayList<>(plugin.getPartyManager().getMembers().keySet());
+                            if (plugin.getConfig().enableExternalSharing())
+                            {
+                                java.util.List<String> partyList = new ArrayList<>(plugin.getPartyManager().getMembers().keySet());
 
-                            // Get leader of party
-                            String leader = plugin.getPartyManager().getLeader();
+                                // Get leader of party
+                                String leader = plugin.getPartyManager().getLeader();
 
-                            // API POST Call to post to discord
-                            HttpUtil.sendUniqueDiscord(
-                                    plugin.getOkHttpClient(),
-                                    "https://osrssplits.xyz/shot/on-drop/",
-                                    partyList,
-                                    leader,
-                                    getUniqueItem(itemStack.getId()),
-                                    screenshotFile
-                            );
+                                // API POST Call to post to discord
+                                HttpUtil.sendUniqueDiscord(
+                                        plugin.getOkHttpClient(),
+                                        "https://osrssplits.xyz/shot/on-drop/",
+                                        partyList,
+                                        leader,
+                                        getUniqueItem(itemStack.getId()),
+                                        screenshotFile
+                                );
 
-                            SwingUtilities.invokeLater(() ->
-                                    showScreenshotNotification("Screenshot taken and uploaded to Discord!")
-                            );
-
+                                SwingUtilities.invokeLater(() ->
+                                        showScreenshotNotification("Screenshot taken and uploaded to Discord!")
+                                );
+                            }
+                            else
+                            {
+                                SwingUtilities.invokeLater(() ->
+                                        showScreenshotNotification("Sharing disabled in config, screenshot saved in screenshot folder!")
+                                );
+                            }
                         }
                         catch (InterruptedException | IOException | AWTException e)
                         {
