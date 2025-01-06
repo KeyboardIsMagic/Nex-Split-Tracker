@@ -2,10 +2,13 @@ package com.osrs_splits;
 
 import com.Utils.PartySocketIOClient;
 import com.Utils.PlayerVerificationStatus;
+import com.google.gson.Gson;
 import com.google.inject.Provides;
+import com.osrs_splits.LootTracker.NexSplitTrackerPanel;
 import com.osrs_splits.PartyManager.PartyManager;
 import com.osrs_splits.PartyManager.PlayerInfo;
 import lombok.Getter;
+import lombok.Setter;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.events.GameStateChanged;
@@ -16,6 +19,7 @@ import net.runelite.client.discord.DiscordService;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
+import net.runelite.client.game.ItemManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
@@ -31,6 +35,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import okhttp3.OkHttpClient;
+import javax.inject.Inject;
 
 @PluginDescriptor(name = "OSRS Splits - The Kodai")
 public class OsrsSplitPlugin extends Plugin
@@ -56,10 +62,16 @@ public class OsrsSplitPlugin extends Plugin
 	@Getter
 	@Inject
 	private ChatMessageManager chatMessageManager;
+	@Getter
+	@Setter
+	@Inject
+	private OkHttpClient okHttpClient;
 
 
 	@Getter
-	private OsrsSplitPluginPanel panel;
+	private OsrsSplitPluginPanel partyManagerPanel;
+
+	private OsrsSplitMasterPanel masterPanel;
 	private NavigationButton navButton;
 
 	@Getter
@@ -67,29 +79,36 @@ public class OsrsSplitPlugin extends Plugin
 
 	@Getter
 	private PartySocketIOClient socketIoClient;
+	@Inject
+	private ItemManager itemManager;
+	@Inject
+	private Gson gson;
+	@Getter
+	private NexSplitTrackerPanel lootTrackerPanel;
+
 
 	@Override
 	protected void startUp() throws Exception
 	{
 		partyManager = new PartyManager(config, this);
 
-		panel = new OsrsSplitPluginPanel(this);
+		partyManagerPanel = new OsrsSplitPluginPanel(this);
 
-		// Initialize Socket.IO
+		lootTrackerPanel = new NexSplitTrackerPanel(itemManager, gson);
+
+		// Init Socket.IO
 		try
 		{
 			String socketIoUri = "https://osrssplits.xyz";
 			socketIoClient = new PartySocketIOClient(socketIoUri, this);
-
 		}
 		catch (Exception e)
 		{
 			e.printStackTrace();
-
 		}
 
 		eventBus.register(this);
-		eventBus.register(panel);
+		eventBus.register(partyManagerPanel);
 
 		saveApiKeyToFile(config.apiKey());
 
@@ -98,13 +117,15 @@ public class OsrsSplitPlugin extends Plugin
 			discordService.init();
 		}
 
+		masterPanel = new OsrsSplitMasterPanel(this, partyManagerPanel, lootTrackerPanel);
+
 		// Create panel button
 		final BufferedImage icon = ImageUtil.loadImageResource(getClass(), "/tempIcon.png");
 		navButton = NavigationButton.builder()
 				.tooltip("OSRS Splits - The Kodai")
 				.icon(icon)
 				.priority(1)
-				.panel(panel)
+				.panel(masterPanel)
 				.build();
 		clientToolbar.addNavigation(navButton);
 	}
@@ -114,7 +135,7 @@ public class OsrsSplitPlugin extends Plugin
 	{
 		clientToolbar.removeNavigation(navButton);
 		eventBus.unregister(this);
-		eventBus.unregister(panel);
+		eventBus.unregister(partyManagerPanel);
 
 		if (socketIoClient != null)
 		{

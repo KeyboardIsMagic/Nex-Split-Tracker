@@ -35,4 +35,13 @@ public interface OsrsSplitsConfig extends Config
 	default boolean saveApiKey() {
 		return false; // Default to false, acts as trigger
 	}
+
+	@ConfigItem(
+			keyName = "increaseDropRate",
+			name = "Increase Drop Rate",
+			description = "Might do something if you really believe"
+	)
+	default boolean dropRateBoost() {
+		return false;
+	}
 }

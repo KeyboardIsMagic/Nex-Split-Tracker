@@ -9,7 +9,6 @@ import io.socket.emitter.Emitter;
 import org.json.JSONArray;
 import java.util.Set;
 import org.json.JSONObject;
-
 import java.util.*;
 
 
@@ -61,11 +60,11 @@ public class PartySocketIOClient
 
                         plugin.getPartyManager().setCurrentPartyPassphrase(null);
 
-                        plugin.getPanel().getCreatePartyButton().setEnabled(true);
-                        plugin.getPanel().getJoinPartyButton().setEnabled(true);
+                        plugin.getPartyManagerPanel().getCreatePartyButton().setEnabled(true);
+                        plugin.getPartyManagerPanel().getJoinPartyButton().setEnabled(true);
 
-                        plugin.getPanel().getStatusLabel().setText("Error: " + msg);
-                        plugin.getPanel().getStatusLabel().setVisible(true);
+                        plugin.getPartyManagerPanel().getStatusLabel().setText("Error: " + msg);
+                        plugin.getPartyManagerPanel().getStatusLabel().setVisible(true);
                     }
                     catch (Exception ex)
                     {
@@ -83,7 +82,7 @@ public class PartySocketIOClient
                         String message = obj.optString("message", "");
 
 
-                        OsrsSplitPluginPanel panel = plugin.getPanel();
+                        OsrsSplitPluginPanel panel = plugin.getPartyManagerPanel();
 
                         if ("success".equalsIgnoreCase(status)) {
                             // if user just created or joined
@@ -169,7 +168,7 @@ public class PartySocketIOClient
         payload.put("world", world);
         payload.put("apiKey", apiKey);
 
-        plugin.getPanel().setLastProposedPassphrase(passphrase);
+        plugin.getPartyManagerPanel().setLastProposedPassphrase(passphrase);
 
 
         socket.emit("create-party", payload);
@@ -186,7 +185,7 @@ public class PartySocketIOClient
         payload.put("world", world);
         payload.put("apiKey", apiKey);
 
-        plugin.getPanel().setLastProposedPassphrase(passphrase);
+        plugin.getPartyManagerPanel().setLastProposedPassphrase(passphrase);
 
 
         socket.emit("join-party", payload);
@@ -243,14 +242,14 @@ public class PartySocketIOClient
                     plugin.getPartyManager().setCurrentPartyPassphrase(null);
                     plugin.getPartyManager().setLeader(null);
 
-                    plugin.getPanel().getCreatePartyButton().setEnabled(true);
-                    plugin.getPanel().getJoinPartyButton().setEnabled(true);
-                    plugin.getPanel().getLeavePartyButton().setVisible(false);
-                    plugin.getPanel().getScreenshotButton().setVisible(false);
+                    plugin.getPartyManagerPanel().getCreatePartyButton().setEnabled(true);
+                    plugin.getPartyManagerPanel().getJoinPartyButton().setEnabled(true);
+                    plugin.getPartyManagerPanel().getLeavePartyButton().setVisible(false);
+                    plugin.getPartyManagerPanel().getScreenshotButton().setVisible(false);
 
-                    plugin.getPanel().updatePartyMembers();
-                    plugin.getPanel().updatePassphraseLabel("");
-                    plugin.getPanel().getPassphraseLabel().setVisible(false);
+                    plugin.getPartyManagerPanel().updatePartyMembers();
+                    plugin.getPartyManagerPanel().updatePassphraseLabel("");
+                    plugin.getPartyManagerPanel().getPassphraseLabel().setVisible(false);
                     return;
                 }
 
@@ -280,14 +279,14 @@ public class PartySocketIOClient
                     plugin.getPartyManager().setCurrentPartyPassphrase(null);
                     plugin.getPartyManager().setLeader(null);
 
-                    plugin.getPanel().getCreatePartyButton().setEnabled(true);
-                    plugin.getPanel().getJoinPartyButton().setEnabled(true);
-                    plugin.getPanel().getLeavePartyButton().setVisible(false);
-                    plugin.getPanel().getScreenshotButton().setVisible(false);
+                    plugin.getPartyManagerPanel().getCreatePartyButton().setEnabled(true);
+                    plugin.getPartyManagerPanel().getJoinPartyButton().setEnabled(true);
+                    plugin.getPartyManagerPanel().getLeavePartyButton().setVisible(false);
+                    plugin.getPartyManagerPanel().getScreenshotButton().setVisible(false);
 
-                    plugin.getPanel().updatePartyMembers();
-                    plugin.getPanel().updatePassphraseLabel("");
-                    plugin.getPanel().getPassphraseLabel().setVisible(false);
+                    plugin.getPartyManagerPanel().updatePartyMembers();
+                    plugin.getPartyManagerPanel().updatePassphraseLabel("");
+                    plugin.getPartyManagerPanel().getPassphraseLabel().setVisible(false);
                     return;
                 }
 
@@ -303,14 +302,14 @@ public class PartySocketIOClient
                     plugin.getPartyManager().setCurrentPartyPassphrase(null);
                     plugin.getPartyManager().setLeader(null);
 
-                    plugin.getPanel().getCreatePartyButton().setEnabled(true);
-                    plugin.getPanel().getJoinPartyButton().setEnabled(true);
-                    plugin.getPanel().getLeavePartyButton().setVisible(false);
-                    plugin.getPanel().getScreenshotButton().setVisible(false);
+                    plugin.getPartyManagerPanel().getCreatePartyButton().setEnabled(true);
+                    plugin.getPartyManagerPanel().getJoinPartyButton().setEnabled(true);
+                    plugin.getPartyManagerPanel().getLeavePartyButton().setVisible(false);
+                    plugin.getPartyManagerPanel().getScreenshotButton().setVisible(false);
 
-                    plugin.getPanel().updatePartyMembers();
-                    plugin.getPanel().updatePassphraseLabel("");
-                    plugin.getPanel().getPassphraseLabel().setVisible(false);
+                    plugin.getPartyManagerPanel().updatePartyMembers();
+                    plugin.getPartyManagerPanel().updatePassphraseLabel("");
+                    plugin.getPartyManagerPanel().getPassphraseLabel().setVisible(false);
                     return;
                 }
 
@@ -320,14 +319,14 @@ public class PartySocketIOClient
 
 
                 // Hide “Loading…” text, if any
-                plugin.getPanel().getStatusLabel().setText("");
-                plugin.getPanel().getStatusLabel().setVisible(false);
+                plugin.getPartyManagerPanel().getStatusLabel().setText("");
+                plugin.getPartyManagerPanel().getStatusLabel().setVisible(false);
 
                 // Show passphrase label & update UI
-                plugin.getPanel().updatePassphraseLabel(passphrase);
-                plugin.getPanel().getPassphraseLabel().setVisible(true);
+                plugin.getPartyManagerPanel().updatePassphraseLabel(passphrase);
+                plugin.getPartyManagerPanel().getPassphraseLabel().setVisible(true);
 
-                plugin.getPanel().updatePartyMembers();
+                plugin.getPartyManagerPanel().updatePartyMembers();
             }
             catch (Exception e)
             {

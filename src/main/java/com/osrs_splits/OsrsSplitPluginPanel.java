@@ -58,11 +58,17 @@ public class OsrsSplitPluginPanel extends PluginPanel
 
     public OsrsSplitPluginPanel(OsrsSplitPlugin plugin)
     {
+        super(false);
         this.plugin = plugin;
 
         setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
+
         gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.anchor = GridBagConstraints.NORTH;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 0.0;
+        gbc.weighty = 0.0;
 
         JPanel partyButtonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
         partyButtonsPanel.add(createPartyButton);
@@ -82,24 +88,24 @@ public class OsrsSplitPluginPanel extends PluginPanel
         leavePanel.add(passphraseLabel, BorderLayout.SOUTH);
 
         gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 2;
+        add(leavePanel, gbc);
+
+        gbc.gridx = 0;
         gbc.gridy = 2;
         gbc.gridwidth = 2;
         add(statusLabel, gbc);
         statusLabel.setVisible(false);
 
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        gbc.gridwidth = 2;
-        gbc.anchor = GridBagConstraints.CENTER;
-        add(leavePanel, gbc);
-
         memberListPanel.setLayout(new BoxLayout(memberListPanel, BoxLayout.Y_AXIS));
         gbc.gridx = 0;
-        gbc.gridy = 2;
+        gbc.gridy = 3;
         gbc.gridwidth = 2;
         add(memberListPanel, gbc);
 
-        gbc.gridy = 3;
+        gbc.gridx = 0;
+        gbc.gridy = 4;
         add(screenshotButton, gbc);
 
         leavePartyButton.setVisible(false);
@@ -660,6 +666,7 @@ public class OsrsSplitPluginPanel extends PluginPanel
             String itemName = "Confirmation Screenshot";
 
             HttpUtil.sendUniqueDiscord(
+                    plugin.getOkHttpClient(),
                     "https://osrssplits.xyz/shot/on-party-screenshot/",
                     partyList,
                     leader,
@@ -729,7 +736,14 @@ public class OsrsSplitPluginPanel extends PluginPanel
                             String leader = plugin.getPartyManager().getLeader();
 
                             // API POST Call to post to discord
-                            HttpUtil.sendUniqueDiscord("https://osrssplits.xyz/shot/on-drop/", partyList, leader, getUniqueItem(itemStack.getId()), screenshotFile);
+                            HttpUtil.sendUniqueDiscord(
+                                    plugin.getOkHttpClient(),
+                                    "https://osrssplits.xyz/shot/on-drop/",
+                                    partyList,
+                                    leader,
+                                    getUniqueItem(itemStack.getId()),
+                                    screenshotFile
+                            );
 
                             SwingUtilities.invokeLater(() ->
                                     showScreenshotNotification("Screenshot taken and uploaded to Discord!")
