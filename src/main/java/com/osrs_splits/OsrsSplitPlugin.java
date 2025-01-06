@@ -38,7 +38,7 @@ import java.util.Collections;
 import okhttp3.OkHttpClient;
 import javax.inject.Inject;
 
-@PluginDescriptor(name = "OSRS Splits - The Kodai")
+@PluginDescriptor(name = "OSRS Splits - The Kodai", configName = "NexSplitTracker")
 public class OsrsSplitPlugin extends Plugin
 {
 	@Getter
@@ -153,7 +153,7 @@ public class OsrsSplitPlugin extends Plugin
 	@Subscribe
 	public void onConfigChanged(ConfigChanged event)
 	{
-		if (event.getGroup().equals("OsrsSplit") && event.getKey().equals("saveApiKey"))
+		if (event.getGroup().equals("nexsplittracker") && event.getKey().equals("saveApiKey"))
 		{
 			if (config.saveApiKey())
 			{
