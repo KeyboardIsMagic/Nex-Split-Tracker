@@ -14,14 +14,18 @@ public class PlayerInfo {
     private boolean verified;
     @Setter
     private boolean confirmedSplit;
+    @Setter
+    private boolean externalSharingEnabled;
 
-    public PlayerInfo(String name, int world, int rank, boolean verified, boolean confirmedSplit) {
+    public PlayerInfo(String name, int world, int rank, boolean verified, boolean confirmedSplit, boolean externalSharing) {
         this.name = name;
         this.world = world;
         this.rank = rank;
         this.verified = verified;
         this.confirmedSplit = confirmedSplit;
+        this.externalSharingEnabled = externalSharing;
     }
+
 }
 
 

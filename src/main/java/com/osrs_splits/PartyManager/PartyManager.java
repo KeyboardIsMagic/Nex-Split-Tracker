@@ -34,7 +34,7 @@ public class PartyManager
         this.plugin = plugin;
     }
 
-    public boolean createParty(String leaderName, String passphrase)
+    public boolean createParty(String leaderName, String passphrase, boolean externalSharing)
     {
         if (this.leader != null)
         {
@@ -50,14 +50,16 @@ public class PartyManager
 
         int world = plugin.getClient().getWorld();
 
-        // default rank/verified => rely on server to fill correct values
+        // default rank/verified, rely on server for correct values
         PlayerInfo pLeader = new PlayerInfo(
                 leaderName,
                 world,
                 -1,
                 false,
-                false
+                false,
+                externalSharing
         );
+        //pLeader.setExternalSharingEnabled(externalSharing);
 
         this.leader = leaderName;
         this.passphrase = passphrase;
@@ -65,7 +67,7 @@ public class PartyManager
 
         members.clear();
         members.put(leaderName, pLeader);
-
+        System.out.println("DEBUG createParty(...) externalSharing = " + externalSharing);
 
         return true;
     }
@@ -141,11 +143,11 @@ public class PartyManager
             o.put("rank", m.getRank());
             o.put("verified", m.isVerified());
             o.put("confirmedSplit", m.isConfirmedSplit());
+            o.put("externalSharingEnabled", m.isExternalSharingEnabled());
             arr.put(o);
         }
         payload.put("members", arr);
 
-        // optional: add apiKey if you want server re-verification
         payload.put("apiKey", plugin.getConfig().apiKey());
 
         plugin.getSocketIoClient().send("party_update", payload.toString());
@@ -166,4 +168,16 @@ public class PartyManager
 
         }
     }
+
+    public void updateLocalExternalSharing(boolean externalSharing)
+    {
+        String localPlayer = plugin.getClient().getLocalPlayer().getName();
+        PlayerInfo info = members.get(localPlayer);
+        if (info != null)
+        {
+            info.setExternalSharingEnabled(externalSharing);
+        }
+    }
+
+
 }

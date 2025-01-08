@@ -82,6 +82,8 @@ public class OsrsSplitPlugin extends Plugin
 	@Inject
 	private ItemManager itemManager;
 	@Inject
+	private ConfigManager configManager;
+	@Inject
 	private Gson gson;
 	@Getter
 	private NexSplitTrackerPanel lootTrackerPanel;
@@ -158,10 +160,45 @@ public class OsrsSplitPlugin extends Plugin
 			if (config.saveApiKey())
 			{
 				saveApiKeyToFile(config.apiKey());
-
 			}
 		}
+
+		if (event.getKey().equals("enableExternalSharing"))
+		{
+			boolean newVal = config.enableExternalSharing();
+			String localPlayer = (client.getLocalPlayer() != null) ? client.getLocalPlayer().getName() : null;
+
+			// If we are in a party, sync the new config choice to the party
+			if (localPlayer != null && partyManager.isInParty(localPlayer))
+			{
+				// 1) Locally store in PlayerInfo for that local player
+				partyManager.updateLocalExternalSharing(newVal);
+
+				// 2) Broadcast to server that we changed our “externalSharingEnabled”
+				partyManager.synchronizePartyWithRedis();
+			}
+
+			// 3) Refresh the UI
+			partyManagerPanel.updatePartyMembers();
+		}
 	}
+
+
+
+
+	private void revertExternalSharingTo(boolean val)
+	{
+		configManager.setConfiguration("nexsplittracker", "enableExternalSharing", val);
+		// forcibly reload the config object so 'config.enableExternalSharing()' is consistent
+		OsrsSplitsConfig reloaded = configManager.getConfig(OsrsSplitsConfig.class);
+		this.config = reloaded;
+
+		// Also reflect it in the PartyManager for local
+		partyManager.updateLocalExternalSharing(val);
+		partyManager.synchronizePartyWithRedis();
+	}
+
+
 
 
 	@Subscribe

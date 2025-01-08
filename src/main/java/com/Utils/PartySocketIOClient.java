@@ -91,11 +91,13 @@ public class PartySocketIOClient
                                 String localPlayer = (plugin.getClient().getLocalPlayer() != null)
                                         ? plugin.getClient().getLocalPlayer().getName()
                                         : null;
+                                boolean externalSharing = plugin.getConfig().enableExternalSharing();
+                                System.out.println("Value of externalSharing in response: " + externalSharing);
 
                                 // set passphrase in the local manager so that we accept the next update :)
                                 plugin.getPartyManager().setCurrentPartyPassphrase(passphrase);
                                 // create local placeholder
-                                plugin.getPartyManager().createParty(localPlayer, passphrase);
+                                plugin.getPartyManager().createParty(localPlayer, passphrase, externalSharing);
 
 
                                 // *** Force server to broadcast final party data
@@ -157,7 +159,7 @@ public class PartySocketIOClient
         socket.emit("request_party_update", payload);
     }
 
-    public void sendCreateParty(String passphrase, String rsn, int world, String apiKey)
+    public void sendCreateParty(String passphrase, String rsn, int world, String apiKey, boolean externalSharing)
     {
         // Mark the action
         lastAction = "create-party";
@@ -167,15 +169,16 @@ public class PartySocketIOClient
         payload.put("rsn", rsn);
         payload.put("world", world);
         payload.put("apiKey", apiKey);
+        payload.put("externalSharingEnabled", externalSharing);
 
         plugin.getPartyManagerPanel().setLastProposedPassphrase(passphrase);
-
+        System.out.println("DEBUG sending JSON: " + payload.toString());
 
         socket.emit("create-party", payload);
     }
 
 
-    public void sendJoinParty(String passphrase, String rsn, int world, String apiKey)
+    public void sendJoinParty(String passphrase, String rsn, int world, String apiKey, boolean externalSharing)
     {
         lastAction = "join-party";
 
@@ -184,9 +187,10 @@ public class PartySocketIOClient
         payload.put("rsn", rsn);
         payload.put("world", world);
         payload.put("apiKey", apiKey);
+        payload.put("externalSharingEnabled", externalSharing);
 
         plugin.getPartyManagerPanel().setLastProposedPassphrase(passphrase);
-
+        System.out.println("DEBUG sending JSON: " + payload.toString());
 
         socket.emit("join-party", payload);
     }
@@ -265,8 +269,11 @@ public class PartySocketIOClient
                                 mem.optInt("world", -1),
                                 mem.optInt("rank", -1),
                                 mem.optBoolean("verified", false),
-                                mem.optBoolean("confirmedSplit", false)
+                                mem.optBoolean("confirmedSplit", false),
+                                mem.optBoolean("externalSharingEnabled", false)
                         );
+                        //boolean ext = mem.optBoolean("externalSharingEnabled", false);
+                        //pInfo.setExternalSharingEnabled(ext);
                         updatedMembers.put(pInfo.getName(), pInfo);
                     }
                 }
@@ -348,6 +355,7 @@ public class PartySocketIOClient
         JSONObject payload = new JSONObject();
         payload.put("action", "party_update");
         payload.put("passphrase", passphrase);
+        //boolean externalSharing = plugin.getConfig().enableExternalSharing();
 
         JSONArray memberArray = new JSONArray();
         for (PlayerInfo member : members.values()) {
@@ -357,6 +365,7 @@ public class PartySocketIOClient
             memberData.put("rank", member.getRank());
             memberData.put("verified", member.isVerified());
             memberData.put("confirmedSplit", member.isConfirmedSplit());
+            memberData.put("externalSharingEnabled", member.isExternalSharingEnabled());
             memberArray.put(memberData);
         }
 

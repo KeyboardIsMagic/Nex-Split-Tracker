@@ -153,6 +153,7 @@ public class OsrsSplitPluginPanel extends PluginPanel
             rawApiKeyTmp = "null";
         }
         final String rawApiKey = rawApiKeyTmp;
+        final boolean externalSharing = plugin.getConfig().enableExternalSharing();
 
         statusLabel.setText("Creating party, please wait...");
         statusLabel.setVisible(true);
@@ -177,7 +178,9 @@ public class OsrsSplitPluginPanel extends PluginPanel
                         passphrase,
                         localPlayer,
                         myWorld,
-                        rawApiKey
+                        rawApiKey,
+                        externalSharing
+
                 );
                 return null;
             }
@@ -213,6 +216,7 @@ public class OsrsSplitPluginPanel extends PluginPanel
             tmpApiKey = "null";
         }
         final String rawApiKey = tmpApiKey;
+        final boolean externalSharing = plugin.getConfig().enableExternalSharing();
 
         statusLabel.setText("Joining party, please wait...");
         statusLabel.setVisible(true);
@@ -234,7 +238,8 @@ public class OsrsSplitPluginPanel extends PluginPanel
                         passphrase,
                         localPlayer,
                         plugin.getClient().getWorld(),
-                        rawApiKey
+                        rawApiKey,
+                        externalSharing
                 );
                 return null;
             }
@@ -310,14 +315,24 @@ public class OsrsSplitPluginPanel extends PluginPanel
         JOptionPane.showMessageDialog(this, "You must be logged in to create or join a party.", "Login Required", JOptionPane.WARNING_MESSAGE);
     }
 
-    private JPanel createPlayerCard(String playerName, int world, boolean verified, boolean splitConfirmed, boolean isLeader, int rank)
+    private JPanel createPlayerCard(String playerName, int world, boolean verified, boolean splitConfirmed, boolean isLeader, int rank, boolean externalSharing)
     {
         JPanel cardPanel = new JPanel(new GridBagLayout());
         cardPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(Color.GRAY, 1, true),
                 new EmptyBorder(5, 5, 5, 5)
         ));
-        cardPanel.setBackground(getBackground());
+
+        if (!externalSharing)
+        {
+            // Use a semi-soft red tint
+            cardPanel.setBackground(new Color(52, 4, 4, 255));
+            cardPanel.setToolTipText("User is not sharing screenshots. They can enable it in plugin settings.");
+        }
+        else
+        {
+            cardPanel.setBackground(getBackground());
+        }
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(2, 5, 2, 5);
@@ -447,7 +462,8 @@ public class OsrsSplitPluginPanel extends PluginPanel
                             p.isVerified(),
                             p.isConfirmedSplit(),
                             p.getName().equals(plugin.getPartyManager().getLeader()),
-                            p.getRank()
+                            p.getRank(),
+                            p.isExternalSharingEnabled()
                     );
                     memberListPanel.add(playerCard);
                     memberListPanel.add(Box.createVerticalStrut(5));
