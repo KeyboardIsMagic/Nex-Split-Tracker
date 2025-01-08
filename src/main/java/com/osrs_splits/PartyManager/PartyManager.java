@@ -67,7 +67,7 @@ public class PartyManager
 
         members.clear();
         members.put(leaderName, pLeader);
-        System.out.println("DEBUG createParty(...) externalSharing = " + externalSharing);
+
 
         return true;
     }

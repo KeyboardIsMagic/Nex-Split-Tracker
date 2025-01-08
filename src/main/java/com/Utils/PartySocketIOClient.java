@@ -92,7 +92,7 @@ public class PartySocketIOClient
                                         ? plugin.getClient().getLocalPlayer().getName()
                                         : null;
                                 boolean externalSharing = plugin.getConfig().enableExternalSharing();
-                                System.out.println("Value of externalSharing in response: " + externalSharing);
+
 
                                 // set passphrase in the local manager so that we accept the next update :)
                                 plugin.getPartyManager().setCurrentPartyPassphrase(passphrase);
@@ -172,7 +172,7 @@ public class PartySocketIOClient
         payload.put("externalSharingEnabled", externalSharing);
 
         plugin.getPartyManagerPanel().setLastProposedPassphrase(passphrase);
-        System.out.println("DEBUG sending JSON: " + payload.toString());
+
 
         socket.emit("create-party", payload);
     }
@@ -190,7 +190,6 @@ public class PartySocketIOClient
         payload.put("externalSharingEnabled", externalSharing);
 
         plugin.getPartyManagerPanel().setLastProposedPassphrase(passphrase);
-        System.out.println("DEBUG sending JSON: " + payload.toString());
 
         socket.emit("join-party", payload);
     }
