@@ -23,7 +23,9 @@ import net.runelite.client.game.ItemManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
+import net.runelite.client.ui.DrawManager;
 import net.runelite.client.ui.NavigationButton;
+import net.runelite.client.util.ImageCapture;
 import net.runelite.client.util.ImageUtil;
 
 import javax.inject.Inject;
@@ -70,8 +72,13 @@ public class OsrsSplitPlugin extends Plugin
 
 	@Getter
 	private OsrsSplitPluginPanel partyManagerPanel;
-
 	private OsrsSplitMasterPanel masterPanel;
+	@Inject
+	@Getter
+	private DrawManager drawManager;
+	@Inject
+	@Getter
+	private ImageCapture imageCapture;
 	private NavigationButton navButton;
 
 	@Getter

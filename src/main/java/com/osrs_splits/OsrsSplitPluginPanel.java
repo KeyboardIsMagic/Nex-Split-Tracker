@@ -11,10 +11,13 @@ import net.runelite.client.chat.QueuedMessage;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.NpcLootReceived;
 import net.runelite.client.game.ItemStack;
+import net.runelite.client.ui.DrawManager;
 import net.runelite.client.ui.PluginPanel;
+import net.runelite.client.util.ImageCapture;
 import org.json.JSONObject;
 
 import javax.imageio.ImageIO;
+import javax.inject.Inject;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -30,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 public class OsrsSplitPluginPanel extends PluginPanel
 {
@@ -50,6 +54,8 @@ public class OsrsSplitPluginPanel extends PluginPanel
     private final JPanel memberListPanel = new JPanel();
     @Getter
     private final JButton screenshotButton = new JButton("Screenshot and Upload");
+    private final DrawManager drawManager;
+    private final ImageCapture imageCapture;
     private Instant lastScreenshotTime = Instant.EPOCH; //FIXME
 
     private final OsrsSplitPlugin plugin;
@@ -60,6 +66,8 @@ public class OsrsSplitPluginPanel extends PluginPanel
     {
         super(false);
         this.plugin = plugin;
+        this.drawManager = plugin.getDrawManager();
+        this.imageCapture = plugin.getImageCapture();
 
         setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -188,7 +196,7 @@ public class OsrsSplitPluginPanel extends PluginPanel
             @Override
             protected void done()
             {
-                // wait for the "response" event in PartySocketIOClient => success or error
+                // wait for response event in PartySocketIOClient, success or error
             }
         };
         worker.execute();
@@ -247,7 +255,7 @@ public class OsrsSplitPluginPanel extends PluginPanel
             @Override
             protected void done()
             {
-                // Wait for the "response" event in PartySocketIOClient => success or error
+                // Wait for response event, success or error
             }
         };
         worker.execute();
@@ -325,7 +333,7 @@ public class OsrsSplitPluginPanel extends PluginPanel
 
         if (!externalSharing)
         {
-            // Use a semi-soft red tint
+            // highlight player card bg red
             cardPanel.setBackground(new Color(52, 4, 4, 255));
             cardPanel.setToolTipText("User is not sharing screenshots. They can enable it in plugin settings.");
         }
@@ -532,7 +540,7 @@ public class OsrsSplitPluginPanel extends PluginPanel
                 .runeLiteFormattedMessage("<col=ff0000>**OSRS Splits - The Kodai**</col>")
                 .build());
 
-        // For each member => build a message based on if they're confirmed
+        // For each member => build message based on confirmation
         plugin.getPartyManager().getMembers().forEach((playerName, playerInfo) ->
         {
             playerName = playerName.trim();
@@ -558,6 +566,18 @@ public class OsrsSplitPluginPanel extends PluginPanel
         delayTimer.start();
     }
 
+    private void postChatMessage(String message)
+    {
+        SwingUtilities.invokeLater(() ->
+        {
+            plugin.getChatMessageManager().queue(
+                    QueuedMessage.builder()
+                            .type(ChatMessageType.GAMEMESSAGE)
+                            .runeLiteFormattedMessage("<col=ff0000>" + message + "</col>")
+                            .build()
+            );
+        });
+    }
 
 
     private JButton createConfirmSplitButton(String playerName)
@@ -602,65 +622,51 @@ public class OsrsSplitPluginPanel extends PluginPanel
         return confirmButton;
     }
 
+
+    private void captureGameScreenshot(Consumer<BufferedImage> onScreenshot)
+    {
+
+        plugin.getDrawManager().requestNextFrameListener(clientFrame ->
+        {
+            BufferedImage finalImage = plugin.getImageCapture().addClientFrame(clientFrame);
+            onScreenshot.accept(finalImage);
+        });
+    }
+
     private void attemptScreenshot(Runnable afterScreenshot)
     {
-        try {
-            screenshotAndUpload();
-            showScreenshotNotification("Screenshot taken and uploaded to Discord!");
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            afterScreenshot.run();
-        }
-    }
-
-    private void showScreenshotNotification(String s)
-    {
-        if(plugin.getConfig().enableExternalSharing())
+        captureGameScreenshot(image ->
         {
-            JOptionPane.showMessageDialog(this, "Screenshot taken and Uploaded to Discord!", "Screenshot", JOptionPane.INFORMATION_MESSAGE);
-        }
-        else
-        {
-            JOptionPane.showMessageDialog(this, "Sharing disabled in config, screenshot saved in screenshot folder!", "Screenshot", JOptionPane.INFORMATION_MESSAGE);
-        }
-    }
-
-    private void screenshotAndUpload()
-    {
-        try
-        {
-            BufferedImage screenshot = captureScreenshot();
-            File screenshotFile = saveScreenshot(screenshot);
-
-            if (plugin.getConfig().enableExternalSharing())
+            // background thread
+            new Thread(() ->
             {
-                uploadToDiscord(screenshotFile);
-            }
+                try
+                {
+                    File screenshotFile = saveScreenshot(image);
 
-        }
-        catch (IOException | AWTException e)
-        {
-            e.printStackTrace();
-        }
+                    if (plugin.getConfig().enableExternalSharing())
+                    {
+                        uploadToDiscord(screenshotFile);
+                        postChatMessage("Screenshot taken and uploaded to Discord!");
+                    }
+                    else
+                    {
+                        postChatMessage("Sharing disabled in config, screenshot saved locally!");
+                    }
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace();
+                }
+                finally
+                {
+                    SwingUtilities.invokeLater(afterScreenshot);
+                }
+            }).start();
+        });
     }
 
 
-    private BufferedImage captureScreenshot() throws AWTException
-    {
-        Window clientWindow = SwingUtilities.getWindowAncestor(plugin.getClient().getCanvas());
-        if (clientWindow != null)
-        {
-            Rectangle clientBounds = clientWindow.getBounds();
-            Robot robot = new Robot();
-            return robot.createScreenCapture(clientBounds);
-        }
-        else
-        {
-
-            return null;
-        }
-    }
 
     private File saveScreenshot(BufferedImage screenshot) throws IOException
     {
@@ -711,7 +717,6 @@ public class OsrsSplitPluginPanel extends PluginPanel
                     itemName,
                     screenshotFile
             );
-
         }
         catch (Exception e)
         {
@@ -742,58 +747,67 @@ public class OsrsSplitPluginPanel extends PluginPanel
         NPC npc = event.getNpc();
         if (npc != null && npc.getId() == TARGET_NPC_ID)
         {
-
-
+            // must be in a party
             if (!plugin.getPartyManager().isInParty(plugin.getClient().getLocalPlayer().getName()))
             {
-
                 return;
             }
 
             for (ItemStack itemStack : event.getItems())
             {
-
                 if (isSpecialItem(itemStack.getId()))
                 {
-
-                    new Thread(() -> {
+                    new Thread(() ->
+                    {
                         try
                         {
+                            Thread.sleep(750);
 
-                            Thread.sleep(1000);
+                            SwingUtilities.invokeLater(() -> {
+                                captureGameScreenshot(screenshot -> {
+                                    new Thread(() -> {
+                                        try
+                                        {
+                                            File screenshotFile = saveScreenshot(screenshot);
 
-                            BufferedImage screenshot = captureScreenshot();
-                            File screenshotFile = saveScreenshot(screenshot);
+                                            if (plugin.getConfig().enableExternalSharing())
+                                            {
+                                                java.util.List<String> partyList = new ArrayList<>(plugin.getPartyManager().getMembers().keySet());
+                                                String leader = plugin.getPartyManager().getLeader();
 
-                            if (plugin.getConfig().enableExternalSharing())
-                            {
-                                java.util.List<String> partyList = new ArrayList<>(plugin.getPartyManager().getMembers().keySet());
+                                                if (leader == null || leader.isEmpty())
+                                                {
+                                                    leader = "Unknown";
+                                                }
 
-                                // Get leader of party
-                                String leader = plugin.getPartyManager().getLeader();
-
-                                // API POST Call to post to discord
-                                HttpUtil.sendUniqueDiscord(
-                                        plugin.getOkHttpClient(),
-                                        "https://osrssplits.xyz/shot/on-drop/",
-                                        partyList,
-                                        leader,
-                                        getUniqueItem(itemStack.getId()),
-                                        screenshotFile
-                                );
-
-                                SwingUtilities.invokeLater(() ->
-                                        showScreenshotNotification("Screenshot taken and uploaded to Discord!")
-                                );
-                            }
-                            else
-                            {
-                                SwingUtilities.invokeLater(() ->
-                                        showScreenshotNotification("Sharing disabled in config, screenshot saved in screenshot folder!")
-                                );
-                            }
+                                                HttpUtil.sendUniqueDiscord(
+                                                        plugin.getOkHttpClient(),
+                                                        "https://osrssplits.xyz/shot/on-drop/",
+                                                        partyList,
+                                                        leader,
+                                                        getUniqueItem(itemStack.getId()),
+                                                        screenshotFile
+                                                );
+                                                SwingUtilities.invokeLater(() ->
+                                                        postChatMessage("Screenshot taken and uploaded to Discord!")
+                                                );
+                                            }
+                                            else
+                                            {
+                                                SwingUtilities.invokeLater(() ->
+                                                        postChatMessage("Sharing disabled in config, screenshot saved in screenshot folder: " + screenshotFile.getAbsolutePath())
+                                                );
+                                            }
+                                        }
+                                        catch (IOException e)
+                                        {
+                                            e.printStackTrace();
+                                        }
+                                    }).start();
+                                });
+                            });
                         }
-                        catch (InterruptedException | IOException | AWTException e)
+                        catch (InterruptedException e)
                         {
                             e.printStackTrace();
                         }
@@ -803,6 +817,8 @@ public class OsrsSplitPluginPanel extends PluginPanel
             }
         }
     }
+
+
 
     private boolean isSpecialItem(int itemId)
     {
