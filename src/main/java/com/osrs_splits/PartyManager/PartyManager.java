@@ -82,8 +82,6 @@ public class PartyManager
         this.currentPartyPassphrase = passphrase;
         this.members.clear();
         this.members.putAll(newMembers);
-
-
     }
 
 
@@ -126,8 +124,6 @@ public class PartyManager
 
     public void synchronizePartyWithRedis()
     {
-
-
         // Build full party data
         JSONObject payload = new JSONObject();
         payload.put("passphrase", passphrase);

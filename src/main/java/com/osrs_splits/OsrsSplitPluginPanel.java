@@ -34,6 +34,8 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class OsrsSplitPluginPanel extends PluginPanel
 {
@@ -59,6 +61,7 @@ public class OsrsSplitPluginPanel extends PluginPanel
     private Instant lastScreenshotTime = Instant.EPOCH; //FIXME
 
     private final OsrsSplitPlugin plugin;
+    private static final Logger log = LoggerFactory.getLogger(OsrsSplitPluginPanel.class);
     private static final int TARGET_NPC_ID = 11282; // goblin 3031, 11282(loot phase) nex
     private static final int[] SPECIAL_ITEM_IDS = {26370, 26372, 26374, 26376, 26378, 26380}; // Added Unique Items (REMOVE BONES)**** (526) bones
 
@@ -656,7 +659,7 @@ public class OsrsSplitPluginPanel extends PluginPanel
                 }
                 catch (IOException e)
                 {
-                    e.printStackTrace();
+                    log.warn("Failed to save/upload screenshot: {}", e.getMessage(), e);
                 }
                 finally
                 {
@@ -720,7 +723,7 @@ public class OsrsSplitPluginPanel extends PluginPanel
         }
         catch (Exception e)
         {
-            e.printStackTrace();
+            log.warn("Failed to upload screenshot to discord: {}", e.getMessage(), e);
         }
     }
 
@@ -801,7 +804,7 @@ public class OsrsSplitPluginPanel extends PluginPanel
                                         }
                                         catch (IOException e)
                                         {
-                                            e.printStackTrace();
+                                            log.warn("Failed to save/upload loot screenshot: {}", e.getMessage(), e);
                                         }
                                     }).start();
                                 });
@@ -809,7 +812,7 @@ public class OsrsSplitPluginPanel extends PluginPanel
                         }
                         catch (InterruptedException e)
                         {
-                            e.printStackTrace();
+                            log.info("Thread interrupted while processing loot screenshot: {}", e.getMessage());
                         }
                     }).start();
                     break;

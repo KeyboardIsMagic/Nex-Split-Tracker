@@ -27,6 +27,8 @@ import net.runelite.client.ui.DrawManager;
 import net.runelite.client.ui.NavigationButton;
 import net.runelite.client.util.ImageCapture;
 import net.runelite.client.util.ImageUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.swing.*;
@@ -38,7 +40,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import okhttp3.OkHttpClient;
-import javax.inject.Inject;
+
 
 @PluginDescriptor(name = "OSRS Splits - The Kodai", configName = "NexSplitTracker")
 public class OsrsSplitPlugin extends Plugin
@@ -64,6 +66,7 @@ public class OsrsSplitPlugin extends Plugin
 	@Getter
 	@Inject
 	private ChatMessageManager chatMessageManager;
+
 	@Getter
 	@Setter
 	@Inject
@@ -95,6 +98,8 @@ public class OsrsSplitPlugin extends Plugin
 	@Getter
 	private NexSplitTrackerPanel lootTrackerPanel;
 
+	private static final Logger log = LoggerFactory.getLogger(OsrsSplitPlugin.class);
+
 
 	@Override
 	protected void startUp() throws Exception
@@ -113,7 +118,7 @@ public class OsrsSplitPlugin extends Plugin
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
+			log.error("Failed to init PartySocketIOClient: {}", e.getMessage(), e);
 		}
 
 		eventBus.register(this);

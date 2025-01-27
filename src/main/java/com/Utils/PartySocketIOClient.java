@@ -5,22 +5,23 @@ import com.osrs_splits.OsrsSplitPluginPanel;
 import com.osrs_splits.PartyManager.PlayerInfo;
 import io.socket.client.IO;
 import io.socket.client.Socket;
-import io.socket.emitter.Emitter;
 import org.json.JSONArray;
-import java.util.Set;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.*;
 
 
 import javax.swing.*;
 import java.net.URISyntaxException;
-import java.util.Timer;
 
 public class PartySocketIOClient
 {
     private final OsrsSplitPlugin plugin;
     private Socket socket;
     private String lastAction = null;
+    private static final Logger log = LoggerFactory.getLogger(PartySocketIOClient.class);
 
     public PartySocketIOClient(String serverUrl, OsrsSplitPlugin plugin)
     {
@@ -43,9 +44,9 @@ public class PartySocketIOClient
                     processPartyUpdate(partyData);
                     socket.emit("ack_party_update", "Party update processed successfully");
                 }
-                catch (Exception e)
+                catch (Exception ignored)
                 {
-                    e.printStackTrace();
+                    //logging not req
                 }
             });
 
@@ -66,9 +67,9 @@ public class PartySocketIOClient
                         plugin.getPartyManagerPanel().getStatusLabel().setText("Error: " + msg);
                         plugin.getPartyManagerPanel().getStatusLabel().setVisible(true);
                     }
-                    catch (Exception ex)
+                    catch (Exception ignored)
                     {
-                        ex.printStackTrace();
+                        //logging not req
                     }
                 });
             });
@@ -112,7 +113,8 @@ public class PartySocketIOClient
                             panel.enableLeaveParty();
                             panel.updatePartyMembers();
                         }
-                        else {
+                        else
+                        {
                             // revert logic
                             plugin.getPartyManager().setCurrentPartyPassphrase(null);
                             plugin.getPartyManager().clearMembers();
@@ -130,8 +132,9 @@ public class PartySocketIOClient
 
                         lastAction = null;
                     }
-                    catch (Exception e) {
-                        e.printStackTrace();
+                    catch (Exception ignored)
+                    {
+                        //logging not req
                     }
                 });
             });
@@ -143,7 +146,7 @@ public class PartySocketIOClient
         }
         catch (URISyntaxException e)
         {
-            e.printStackTrace();
+            log.error("Invalid Socket.IO URI: {}", e.getMessage(), e);
         }
     }
 
@@ -233,7 +236,6 @@ public class PartySocketIOClient
                 // If incoming passphrase doesn't match our local passphrase, ignore
                 if (!passphrase.equals(localPassphrase))
                 {
-
                     return;
                 }
 
@@ -271,7 +273,6 @@ public class PartySocketIOClient
                                 mem.optBoolean("confirmedSplit", false),
                                 mem.optBoolean("externalSharingEnabled", false)
                         );
-                        //boolean ext = mem.optBoolean("externalSharingEnabled", false);
                         //pInfo.setExternalSharingEnabled(ext);
                         updatedMembers.put(pInfo.getName(), pInfo);
                     }
@@ -334,9 +335,9 @@ public class PartySocketIOClient
 
                 plugin.getPartyManagerPanel().updatePartyMembers();
             }
-            catch (Exception e)
+            catch (Exception ignored)
             {
-                e.printStackTrace();
+                //logging not req
             }
         });
     }
