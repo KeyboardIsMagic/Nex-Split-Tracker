@@ -43,7 +43,7 @@ In the Loot Tracker tab you'll find a spreadsheet inspired by the Raid Data Trac
 2. Click "Delete"!
 
 ### Party Manager
-In the Party Manager tab you'll be able to create or join parties much like the Party Panel plugin. This section
+In the Party Manager tab you'll be able to create or join parties much like the Party Panel plugin.
 
 #### Creating a Party
 1. Click **Create Party** in the plugin panel.  
