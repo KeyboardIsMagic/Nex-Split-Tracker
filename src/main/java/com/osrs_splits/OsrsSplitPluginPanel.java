@@ -58,7 +58,7 @@ public class OsrsSplitPluginPanel extends PluginPanel
     private final JButton screenshotButton = new JButton("Screenshot and Upload");
     private final DrawManager drawManager;
     private final ImageCapture imageCapture;
-    private Instant lastScreenshotTime = Instant.EPOCH; //FIXME
+    private Instant lastScreenshotTime = Instant.EPOCH;
 
     private final OsrsSplitPlugin plugin;
     private static final Logger log = LoggerFactory.getLogger(OsrsSplitPluginPanel.class);

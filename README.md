@@ -1,8 +1,8 @@
 # OSRS Splits - The Kodai
-![Title](src/main/resources/LootTracker.png)
-![Title](src/main/resources/PartyManager.png)
-![Title](src/main/resources/PluginConfig.png)
-![Title](src/main/resources/Ranks.png)
+![Title](rmImages/LootTracker.png)
+![Title](rmImages/PartyManager.png)
+![Title](rmImages/PluginConfig.png)
+![Title](rmImages/Ranks.png)
 
 
 A custom RuneLite plugin that helps you manage parties, display player verification, and capture in-game screenshots—enhancing trust and transparency within the **[OSRS Splits](https://discord.gg/osrssplits)**
@@ -32,7 +32,7 @@ This is an extension of the previous Nex Split Tracker plugin which functionalit
 In the Loot Tracker tab you'll find a spreadsheet inspired by the Raid Data Tracker to help track profits from splitting items among friends and squads. 
 
 #### Adding an item to the tracker
-1. Select the item you or your party recieved from the drop down menu.
+1. Select the item you or your party recieved from the drop-down menu.
 2. Check the box if the item was in your name, otherwise leave this blank.
 3. Enter the amount of GP that was given to you for your split amount as a whole number or decimal (***example***: 45 or 45.5)
 4. Enter in the team size of the party you recieved the drop with (1,2,3, etc..)
