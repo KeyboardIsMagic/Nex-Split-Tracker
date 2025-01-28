@@ -221,15 +221,17 @@ public class OsrsSplitPlugin extends Plugin
 
 		if (newWorld < 1)
 		{
-
 			return;
 		}
 
+		if (client.getLocalPlayer() == null)
+		{
+			return;
+		}
 
 		String localPlayer = client.getLocalPlayer().getName();
 		if (!partyManager.isInParty(localPlayer))
 		{
-
 			return;
 		}
 
