@@ -14,6 +14,7 @@ import net.runelite.client.game.ItemStack;
 import net.runelite.client.ui.DrawManager;
 import net.runelite.client.ui.PluginPanel;
 import net.runelite.client.util.ImageCapture;
+import okhttp3.Response;
 import org.json.JSONObject;
 
 import javax.imageio.ImageIO;
@@ -650,7 +651,7 @@ public class OsrsSplitPluginPanel extends PluginPanel
                     if (plugin.getConfig().enableExternalSharing())
                     {
                         uploadToDiscord(screenshotFile);
-                        postChatMessage("Screenshot taken and uploaded to Discord!");
+                        //postChatMessage("Screenshot taken and uploaded to Discord!");
                     }
                     else
                     {
@@ -692,7 +693,6 @@ public class OsrsSplitPluginPanel extends PluginPanel
 
     private void uploadToDiscord(File screenshotFile)
     {
-
         if (!plugin.getConfig().enableExternalSharing())
         {
             return;
@@ -700,10 +700,7 @@ public class OsrsSplitPluginPanel extends PluginPanel
 
         try
         {
-            // get list of current party members
-            java.util.List<String> partyList = new java.util.ArrayList<>(plugin.getPartyManager().getMembers().keySet());
-
-            // grab party leader
+            java.util.List<String> partyList = new ArrayList<>(plugin.getPartyManager().getMembers().keySet());
             String leader = plugin.getPartyManager().getLeader();
             if (leader == null || leader.isEmpty())
             {
@@ -712,20 +709,76 @@ public class OsrsSplitPluginPanel extends PluginPanel
 
             String itemName = "Confirmation Screenshot";
 
-            HttpUtil.sendUniqueDiscord(
+            String responseBody = HttpUtil.sendUniqueDiscord(
                     plugin.getOkHttpClient(),
                     "https://osrssplits.xyz/shot/on-party-screenshot/",
                     partyList,
                     leader,
                     itemName,
-                    screenshotFile
+                    screenshotFile,
+                    plugin.getConfig().apiKey()
             );
+
+            log.info("Screenshot uploaded successfully.");
+            postChatMessage("Screenshot taken and uploaded to Discord!");
+
         }
-        catch (Exception e)
+        catch (IOException e)
         {
-            log.warn("Failed to upload screenshot to discord: {}", e.getMessage(), e);
+            String errorMessage = e.getMessage();
+            boolean expectedError = false;
+
+            if (errorMessage.contains("403"))
+            {
+                expectedError = true;
+                if (errorMessage.contains("API key is missing")) {
+                    postChatMessage("Screenshot taken, but not uploaded: API key is missing.");
+                }
+                else if (errorMessage.contains("Invalid API key")) {
+                    postChatMessage("Screenshot taken, but not uploaded: Invalid API key.");
+                }
+                else if (errorMessage.contains("No valid RSNs")) {
+                    postChatMessage("Screenshot taken, but not uploaded: No valid RSNs for API key.");
+                }
+                else if (errorMessage.contains("RSN does not match API key")) {
+                    postChatMessage("Screenshot taken, but not uploaded: RSN does not match API key.");
+                }
+                else {
+                    postChatMessage("Screenshot taken, but not uploaded: Unauthorized request.");
+                }
+            }
+            else if (errorMessage.contains("422"))
+            {
+                expectedError = true;
+                postChatMessage("Screenshot taken, but not uploaded: Invalid request data.");
+            }
+            else if (errorMessage.contains("500"))
+            {
+                postChatMessage("Screenshot taken, but upload failed: Server error.");
+            }
+            else
+            {
+                postChatMessage("Screenshot taken, but upload failed: Unknown error.");
+            }
+
+            if (expectedError)
+            {
+                log.info("Screenshot upload failed due to expected issue: {}", errorMessage);
+            }
+            else
+            {
+                // only log WARN if it's an unexpected issue
+                log.warn("Unexpected error during screenshot upload: {}", errorMessage, e);
+            }
         }
     }
+
+
+
+
+
+
+
 
 
 
@@ -789,7 +842,9 @@ public class OsrsSplitPluginPanel extends PluginPanel
                                                         partyList,
                                                         leader,
                                                         getUniqueItem(itemStack.getId()),
-                                                        screenshotFile
+                                                        screenshotFile,
+                                                        null
+
                                                 );
                                                 SwingUtilities.invokeLater(() ->
                                                         postChatMessage("Screenshot taken and uploaded to Discord!")

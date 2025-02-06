@@ -49,8 +49,9 @@ public interface OsrsSplitsConfig extends Config
 	@ConfigItem(
 			keyName = "enableExternalSharing",
 			name = "Enable External Sharing",
-			description = "<html><b>WARNING:</b> Enabling this will send your data (screenshots, party info) to an external server. Use at your own risk.</html>",
-			position = 4
+			warning = "<html><b>WARNING:</b> Enabling this will send your data (screenshots, party info) to an external server. Use at your own risk.</html>",
+			position = 4,
+            description = ""
 	)
 	default boolean enableExternalSharing() { return false; }
 }

@@ -1,7 +1,7 @@
 package com.Utils;
 
 import okhttp3.*;
-import okio.BufferedSink;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -54,13 +54,14 @@ public class HttpUtil
     }
 
 
-    public static void sendUniqueDiscord(
+    public static String sendUniqueDiscord(
             OkHttpClient client,
             String urlString,
             List<String> partyList,
             String leader,
             String itemName,
-            File imageFile
+            File imageFile,
+            String apiKey
     ) throws IOException
     {
         String mimeType = Files.probeContentType(imageFile.toPath());
@@ -78,19 +79,26 @@ public class HttpUtil
                 .addFormDataPart("item_name", itemName)
                 .addFormDataPart("screenshot", imageFile.getName(), fileBody);
 
+        if (apiKey != null && !apiKey.isEmpty()) {
+            formBuilder.addFormDataPart("api_key", apiKey);
+        }
+
+
         Request request = new Request.Builder()
                 .url(urlString)
                 .post(formBuilder.build())
                 .build();
 
-
         try (Response response = client.newCall(request).execute())
         {
-            if (!response.isSuccessful())
-            {
+            if (!response.isSuccessful()) {
                 throw new IOException("Unexpected response code: " + response.code());
             }
 
+            // read response before closing it
+            return response.body() != null ? response.body().string() : "{}";
         }
     }
+
+
 }
