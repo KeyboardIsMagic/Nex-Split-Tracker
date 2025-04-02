@@ -12,48 +12,6 @@ public class HttpUtil
 {
     private static final MediaType JSON = MediaType.parse("application/json");
 
-    public static String postRequest(OkHttpClient client, String urlString, String jsonInput) throws IOException
-    {
-        RequestBody body = RequestBody.create(JSON, jsonInput);
-
-        Request request = new Request.Builder()
-                .url(urlString)
-                .post(body)
-                .build();
-
-        try (Response response = client.newCall(request).execute())
-        {
-            if (!response.isSuccessful())
-            {
-                throw new IOException("Unexpected response code: " + response.code());
-            }
-
-            ResponseBody responseBody = response.body();
-            return (responseBody != null) ? responseBody.string() : "";
-        }
-    }
-
-
-    public static String getRequest(OkHttpClient client, String urlString) throws IOException
-    {
-        Request request = new Request.Builder()
-                .url(urlString)
-                .get()
-                .build();
-
-        try (Response response = client.newCall(request).execute())
-        {
-            if (!response.isSuccessful())
-            {
-                throw new IOException("Unexpected response code: " + response.code());
-            }
-
-            ResponseBody responseBody = response.body();
-            return (responseBody != null) ? responseBody.string() : "";
-        }
-    }
-
-
     public static String sendUniqueDiscord(
             OkHttpClient client,
             String urlString,

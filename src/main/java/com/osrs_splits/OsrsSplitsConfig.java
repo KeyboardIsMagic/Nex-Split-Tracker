@@ -44,7 +44,7 @@ public interface OsrsSplitsConfig extends Config
 	)
 	default boolean dropRateBoost() {
 		return false;
-	}
+	} //meme
 
 	@ConfigItem(
 			keyName = "enableExternalSharing",

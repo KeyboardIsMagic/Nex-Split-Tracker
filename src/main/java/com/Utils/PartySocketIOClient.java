@@ -351,41 +351,6 @@ public class PartySocketIOClient
 
     }
 
-    public void sendPartyUpdate(String passphrase, Map<String, PlayerInfo> members) {
-        JSONObject payload = new JSONObject();
-        payload.put("action", "party_update");
-        payload.put("passphrase", passphrase);
-        //boolean externalSharing = plugin.getConfig().enableExternalSharing();
-
-        JSONArray memberArray = new JSONArray();
-        for (PlayerInfo member : members.values()) {
-            JSONObject memberData = new JSONObject();
-            memberData.put("name", member.getName());
-            memberData.put("world", member.getWorld());
-            memberData.put("rank", member.getRank());
-            memberData.put("verified", member.isVerified());
-            memberData.put("confirmedSplit", member.isConfirmedSplit());
-            memberData.put("externalSharingEnabled", member.isExternalSharingEnabled());
-            memberArray.put(memberData);
-        }
-
-        payload.put("members", memberArray);
-
-        socket.emit("party_update", payload.toString());
-
-    }
-
-
-
-    public void sendDisbandParty(String passphrase) {
-        JSONObject payload = new JSONObject();
-        payload.put("action", "party_disband");
-        payload.put("passphrase", passphrase);
-
-        // Emit the event
-        socket.emit("party_disband", payload.toString());
-
-    }
 
 
 }

@@ -34,7 +34,7 @@ public class PartyManager
         this.plugin = plugin;
     }
 
-    public boolean createParty(String leaderName, String passphrase, boolean externalSharing)
+    public void createParty(String leaderName, String passphrase, boolean externalSharing)
     {
         if (this.leader != null)
         {
@@ -45,7 +45,7 @@ public class PartyManager
         if (leaderName == null || leaderName.isEmpty() || passphrase == null || passphrase.isEmpty())
         {
 
-            return false;
+            return;
         }
 
         int world = plugin.getClient().getWorld();
@@ -69,7 +69,6 @@ public class PartyManager
         members.put(leaderName, pLeader);
 
 
-        return true;
     }
 
     public void updateCurrentParty(String passphrase, Map<String, PlayerInfo> newMembers)

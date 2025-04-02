@@ -14,11 +14,9 @@ import net.runelite.client.game.ItemStack;
 import net.runelite.client.ui.DrawManager;
 import net.runelite.client.ui.PluginPanel;
 import net.runelite.client.util.ImageCapture;
-import okhttp3.Response;
 import org.json.JSONObject;
 
 import javax.imageio.ImageIO;
-import javax.inject.Inject;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
