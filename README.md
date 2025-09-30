@@ -2,14 +2,14 @@
 ![Title](src/main/resources/displayTitlePlugin.JPG)
 ## Overview
 
-The Nex Split Tracker is a RuneLite plugin designed for players to efficiently track and manage loot splits from the Nex. The plugin provides an easy-to-use interface for recording drops, splits, and team sizes.
+The Nex Split Tracker is a RuneLite plugin designed for players to efficiently track and manage loot splits from Nex. The plugin provides an easy-to-use interface for recording drops, splits, and team sizes.
 
 
 ## Features
 
 Log every drop received from Nex, including the item, split amount, and team size.
 View real-time statistics for each unique drop, including the number of times seen, received, and total split value.
-Secondary Table View: A detailed view for each logged drop, including the date, team size, and split amount.
+Secondary Table View: A detailed view for each logged drop, including the date, kill count, team size, and split amount.
 Save and load your drop data between RuneLite sessions.
 
 

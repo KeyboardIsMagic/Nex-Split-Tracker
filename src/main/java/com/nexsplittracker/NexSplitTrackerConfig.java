@@ -18,4 +18,24 @@ public interface NexSplitTrackerConfig extends Config
 		return false;
 	}
 
+	@ConfigItem(
+			keyName = "showKillCount",
+			name = "Show Kill Count",
+			description = "Display kill count instead of date in the details table"
+	)
+	default boolean showKillCount()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+			keyName = "enableKillCountEntry",
+			name = "Enable Kill Count Entry",
+			description = "Show kill count input field when adding drops"
+	)
+	default boolean enableKillCountEntry()
+	{
+		return true;
+	}
+
 }

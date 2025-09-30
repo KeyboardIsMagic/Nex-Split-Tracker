@@ -26,6 +26,4 @@ public class CustomTextField extends JTextField
     public void setSuffix(String suffix)
     {this.suffix = suffix;}
 
-    public void setSuffixColor(Color suffixColor)
-    {this.suffixColor = suffixColor;}
 }

@@ -1,5 +1,11 @@
 package com.nexsplittracker;
 
+/**
+ * Legacy data model - kept for backward compatibility during data migration.
+ * New code should use ItemDataV2 instead.
+ * @deprecated Use ItemDataV2 for new implementations
+ */
+@Deprecated
 class ItemData
 {
     private String itemName;

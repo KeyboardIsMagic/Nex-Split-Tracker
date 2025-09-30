@@ -1,79 +1,61 @@
 package com.nexsplittracker;
 
 import com.google.gson.Gson;
-import net.runelite.client.RuneLite;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.ui.PluginPanel;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableColumnModel;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.FileReader;
-import java.io.Reader;
-import java.io.File;
-import java.lang.reflect.Type;
-import com.google.gson.reflect.TypeToken;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class NexSplitTrackerPanel extends PluginPanel
 {
     private final ItemManager itemManager;
-    private JTable dropTable;
-    private DefaultTableModel tableModel;
-    private JTable itemDetailsTable;
-    private DefaultTableModel itemDetailsTableModel;
+    private final NexSplitTrackerConfig config;
     private JComboBox<String> itemComboBox;
     private CustomTextField splitTextField;
+    private JTextField killCountField;
+    private JLabel killCountLabel;
     private JCheckBox receivedCheckBox;
-    private final Gson gson;
+    private JTextField teamSizeField;
+    private JPanel userInputPanel;
 
-    private final List<ItemData> itemDataList = new ArrayList<>();
+    private final DataManager dataManager;
+    private final TableManager tableManager;
     private static final Logger logger = Logger.getLogger(NexSplitTrackerPanel.class.getName());
-    private static final File PLUGIN_DIR = new File(RuneLite.RUNELITE_DIR, "NexSplitTracker");
 
-    public NexSplitTrackerPanel(ItemManager itemManager, Gson gson)
+    public NexSplitTrackerPanel(ItemManager itemManager, Gson gson, NexSplitTrackerConfig config)
     {
         super();
         this.itemManager = itemManager;
-        this.gson = gson;
+        this.config = config;
+        this.dataManager = new DataManager(gson);
+        this.tableManager = new TableManager(itemManager, config);
+
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-
-        createHeader();
-        initializeTable();
-        initializeTableData();
-        userInputPanel();
-        initializeSecondaryTable();
-
-        try
-        {
-            createPluginDirectory();
-            String dataFilePath = new File(PLUGIN_DIR, "data.json").getAbsolutePath();
-            loadDataFromFile(dataFilePath);
-            updateTablesFromLoadedData();
-        }
-        catch (Exception e)
-        {
-            logger.log(Level.SEVERE, "Error initializing plugin: ", e);
-        }
-
+        initializeUI();
+        loadData();
     }
 
+
+    private void initializeUI()
+    {
+        createHeader();
+        add(tableManager.initializePrimaryTable(), BorderLayout.CENTER);
+        createUserInputPanel();
+
+        JScrollPane secondaryScrollPane = new JScrollPane(tableManager.initializeSecondaryTable());
+        secondaryScrollPane.setPreferredSize(new Dimension(400, 250));
+        add(secondaryScrollPane, BorderLayout.SOUTH);
+
+        setupSecondaryTableMouseListener();
+    }
 
     private void createHeader()
     {
@@ -90,183 +72,170 @@ public class NexSplitTrackerPanel extends PluginPanel
         add(headerPanel);
     }
 
-
-    private void createPluginDirectory()
+    private void loadData()
     {
-        if (!PLUGIN_DIR.exists())
+        dataManager.loadData();
+        updateTables();
+    }
+
+    private void updateTables()
+    {
+        tableManager.updatePrimaryTable(dataManager.getAllItems());
+        tableManager.updateSecondaryTable(dataManager.getAllItems());
+    }
+
+    public void onConfigChanged()
+    {
+        // Update the secondary table to reflect any config changes (show kc/date)
+        updateTables();
+
+        // Update kill count field visibility
+        updateKillCountFieldVisibility();
+    }
+
+    private void updateKillCountFieldVisibility()
+    {
+        if (killCountField != null && killCountLabel != null)
         {
-            PLUGIN_DIR.mkdirs(); // Create directory if it doesn't exist
+            boolean shouldShow = config.enableKillCountEntry();
+            killCountField.setVisible(shouldShow);
+            killCountLabel.setVisible(shouldShow);
+
+            // Refresh the layout
+            if (userInputPanel != null)
+            {
+                userInputPanel.revalidate();
+                userInputPanel.repaint();
+            }
         }
     }
 
-
-    private void saveDataToFile(String filePath)
+    private void addNewDrop()
     {
         try
         {
-            FileWriter writer = new FileWriter(filePath);
-            gson.toJson(itemDataList, writer);
-            writer.flush();
-            writer.close();
-            logger.info("Data saved to file: " + filePath);
+            String selectedItem = (String) itemComboBox.getSelectedItem();
+            boolean isReceived = receivedCheckBox.isSelected();
+            double splitAmount = validateAndParseDouble(splitTextField.getText(), "Split Amount");
+            int teamSize = validateAndParseInt(teamSizeField.getText(), "Team Size");
+
+            Integer killCount = null;
+            if (config.enableKillCountEntry() && killCountField != null &&
+                killCountField.isVisible() && !killCountField.getText().trim().isEmpty())
+            {
+                killCount = validateAndParseInt(killCountField.getText(), "Kill Count");
+            }
+
+            String formattedDate = LocalDate.now().format(DateTimeFormatter.ofPattern("MM/dd/yy"));
+            ItemDataV2 newItem = new ItemDataV2(selectedItem, splitAmount, formattedDate, teamSize, isReceived, killCount);
+
+            dataManager.addItem(newItem);
+            updateTables();
+            clearInputFields();
+
         }
-        catch (IOException e)
+        catch (NumberFormatException e)
         {
-            logger.log(Level.SEVERE, "Error saving data to file: ", e);
+            JOptionPane.showMessageDialog(this, e.getMessage(), "Invalid Input", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-
-    private void loadDataFromFile(String filePath)
+    private double validateAndParseDouble(String text, String fieldName) throws NumberFormatException
     {
+        if (text == null || text.trim().isEmpty())
+        {
+            throw new NumberFormatException(fieldName + " cannot be empty");
+        }
         try
         {
-            Reader reader = new FileReader(filePath);
-            Type listType = new TypeToken<ArrayList<ItemData>>(){}.getType();
-            List<ItemData> loadedData = gson.fromJson(reader, listType);
-            if (loadedData != null)
-            {
-                itemDataList.addAll(loadedData);
-            }
-            reader.close();
+            return Double.parseDouble(text.trim());
         }
-        catch (IOException e)
+        catch (NumberFormatException e)
         {
-            e.printStackTrace();
+            throw new NumberFormatException("Invalid " + fieldName + ": Please enter a valid number");
         }
-        updatePrimaryTable();
-        logger.info("Data loaded from file: " + filePath);
     }
 
-    private void updateTablesFromLoadedData()
+    private int validateAndParseInt(String text, String fieldName) throws NumberFormatException
     {
-        resetPrimaryTableData();
-        Map<String, ItemAggregatedData> aggregatedDataMap = aggregateDataForPrimaryTable();
-        updatePrimaryTableWithAggregatedData(aggregatedDataMap);
-        updateSecondaryTable();
-    }
-
-
-    private Map<String, ItemAggregatedData> aggregateDataForPrimaryTable()
-    {
-        Map<String, ItemAggregatedData> aggregatedDataMap = new HashMap<>();
-        for (ItemData item : itemDataList)
+        if (text == null || text.trim().isEmpty())
         {
-            String itemName = item.getItemName();
-            aggregatedDataMap.putIfAbsent(itemName, new ItemAggregatedData());
-            ItemAggregatedData aggregatedData = aggregatedDataMap.get(itemName);
-
-            if (item.isReceived())
-            {
-                aggregatedData.increaseReceived();
-            }
-            else
-            {
-                aggregatedData.increaseSeen();
-            }
-            aggregatedData.increaseSplit(item.getSplitAmount());
+            throw new NumberFormatException(fieldName + " cannot be empty");
         }
-        return aggregatedDataMap;
-    }
-
-
-    private void updatePrimaryTableWithAggregatedData(Map<String, ItemAggregatedData> aggregatedDataMap)
-    {
-        for (Map.Entry<String, ItemAggregatedData> entry : aggregatedDataMap.entrySet())
+        try
         {
-            String itemName = entry.getKey();
-            ItemAggregatedData aggregatedData = entry.getValue();
-
-            int index = findRowIndexByItemName(itemName);
-            if (index != -1)
+            int value = Integer.parseInt(text.trim());
+            if (value < 0)
             {
-                int totalOccurrences = getTotalOccurrencesOfItem(itemName);
-                int seenCount = totalOccurrences - aggregatedData.getReceivedCount();
-
-                tableModel.setValueAt(aggregatedData.getReceivedCount(), index, 1); // Update 'Received' count
-                tableModel.setValueAt(seenCount, index, 2); // Update 'Seen' count
-                tableModel.setValueAt(aggregatedData.getTotalSplit(), index, 3); // Update 'Split' value
+                throw new NumberFormatException(fieldName + " must be a positive number");
             }
+            return value;
         }
-    }
-
-
-
-    private int getTotalOccurrencesOfItem(String itemName)
-    {
-        int count = 0;
-        for (ItemData item : itemDataList)
+        catch (NumberFormatException e)
         {
-            if (item.getItemName().equals(itemName))
-            {
-                count++;
-            }
+            throw new NumberFormatException("Invalid " + fieldName + ": Please enter a valid positive integer");
         }
-        return count;
     }
 
-
-    private void initializeTable()
+    private void clearInputFields()
     {
-        String[] columnNames = {"Drop", "Received", "Seen", "Split"};
-        tableModel = new DefaultTableModel(columnNames, 0)
+        splitTextField.setText("");
+        teamSizeField.setText("");
+        if (killCountField != null)
+        {
+            killCountField.setText("");
+        }
+        receivedCheckBox.setSelected(false);
+    }
+
+    private void setupSecondaryTableMouseListener()
+    {
+        tableManager.getSecondaryTable().addMouseListener(new MouseAdapter()
         {
             @Override
-            public boolean isCellEditable(int row, int column)
+            public void mousePressed(MouseEvent e)
             {
-                return false; // Make all rows non-editable
+                int row = tableManager.getSecondaryTable().rowAtPoint(e.getPoint());
+                if (row >= 0 && row < tableManager.getSecondaryTable().getRowCount())
+                {
+                    tableManager.getSecondaryTable().setRowSelectionInterval(row, row);
+
+                    if (SwingUtilities.isRightMouseButton(e))
+                    {
+                        showDeletePopup(e.getX(), e.getY(), row);
+                    }
+                }
             }
-        };
 
-        dropTable = new JTable(tableModel);
-
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
-
-        dropTable.setFillsViewportHeight(true);
-        dropTable.setDefaultEditor(Object.class, null);
-        dropTable.setRowHeight(30);
-        dropTable.setShowGrid(true);
-        dropTable.setGridColor(Color.BLACK);
-        dropTable.setShowHorizontalLines(true);
-        dropTable.setShowVerticalLines(false);
-
-        dropTable.getColumnModel().getColumn(0).setCellRenderer(new ImageRenderer());
-        dropTable.getColumnModel().getColumn(1).setCellRenderer(centerRenderer);
-        dropTable.getColumnModel().getColumn(2).setCellRenderer(centerRenderer);
-        dropTable.getColumnModel().getColumn(3).setCellRenderer(centerRenderer);
-
-        add(dropTable, BorderLayout.CENTER);
-
-        tableModel.addRow(new Object[]{"Drop", "Received", "Seen", "Split"});
-        tableModel.addRow(new Object[]{"Total", 0, 0, 0});
+            @Override
+            public void mouseClicked(MouseEvent e)
+            {
+                if (e.getClickCount() == 2 && SwingUtilities.isLeftMouseButton(e))
+                {
+                    int row = tableManager.getSecondaryTable().rowAtPoint(e.getPoint());
+                    if (row >= 0 && row < tableManager.getSecondaryTable().getRowCount())
+                    {
+                        editTableEntry(row);
+                    }
+                }
+            }
+        });
     }
 
-    private void initializeTableData()
+    private void createUserInputPanel()
     {
-        for (NexUniques unique : NexUniques.values())
-        {
-            ImageIcon icon = new ImageIcon(itemManager.getImage(unique.getItemId()));
-            icon.setDescription(unique.getFullName());
-            Object[] row = {icon, 0, 0, 0.0};
-            tableModel.insertRow(tableModel.getRowCount() - 1, row);
-        }
-    }
-
-    private void userInputPanel()
-    {
-        JPanel userInputPanel = new JPanel(new GridBagLayout());
+        userInputPanel = new JPanel(new GridBagLayout());
         userInputPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridwidth = 1;
-        gbc.fill = GridBagConstraints.HORIZONTAL; // Adjust component to fill the space
-        gbc.weightx = 0.5; // Proportion of extra horizontal space the component should occupy
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 0.5;
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.anchor = GridBagConstraints.WEST;
 
-        // Item selection components
+        // Item selection
         String[] itemNames = NexUniques.names();
         itemComboBox = new JComboBox<>(itemNames);
         userInputPanel.add(new JLabel("Select Item:"), gbc);
@@ -274,17 +243,11 @@ public class NexSplitTrackerPanel extends PluginPanel
         userInputPanel.add(itemComboBox, gbc);
         itemComboBox.setToolTipText("Select the item you want to add");
 
-        // 'Received by Me' checkbox
-        gbc.anchor = GridBagConstraints.WEST;
-        // Label "Received by Me:"
-        gbc.gridx = 0; // Column 0
-        gbc.gridy = 1; // Row 1
-        gbc.gridwidth = 2; // Takes up 2 column
+        // Received checkbox
+        gbc.gridx = 0;
+        gbc.gridy = 1;
         userInputPanel.add(new JLabel("Received by Me:"), gbc);
-        // Checkbox
-        gbc.gridwidth = 1;
-        gbc.gridx = 1; // Column 1, next to the label
-        gbc.ipadx = 60; // Additional padding in the x-direction
+        gbc.gridx = 1;
         receivedCheckBox = new JCheckBox();
         userInputPanel.add(receivedCheckBox, gbc);
         receivedCheckBox.setToolTipText("Check this box if you received the drop in your name");
@@ -302,397 +265,145 @@ public class NexSplitTrackerPanel extends PluginPanel
         // Team size input
         gbc.gridx = 0;
         gbc.gridy = 3;
-        JTextField teamSizeField = new JTextField(10);
+        teamSizeField = new JTextField(10);
         userInputPanel.add(new JLabel("Team Size:"), gbc);
         gbc.gridx = 1;
         userInputPanel.add(teamSizeField, gbc);
-        teamSizeField.setToolTipText("Enter in the team size");
+        teamSizeField.setToolTipText("Enter the team size");
 
-        // 'Add Drop' button
+        // Kill count input (always create but conditionally show)
         gbc.gridx = 0;
         gbc.gridy = 4;
+        killCountLabel = new JLabel("Kill Count:");
+        killCountField = new JTextField(10);
+        killCountField.setToolTipText("Enter the kill count when this drop occurred (optional)");
+
+        // Add kill count components to panel
+        userInputPanel.add(killCountLabel, gbc);
+        gbc.gridx = 1;
+        userInputPanel.add(killCountField, gbc);
+
+        // Set initial visibility based on config
+        updateKillCountFieldVisibility();
+
+        // Add Drop button
+        gbc.gridx = 0;
+        gbc.gridy = 5;
         gbc.gridwidth = 2;
         JButton addButton = new JButton("Add Drop");
         addButton.setToolTipText("Click to add a new drop");
-
-        addButton.addActionListener(e ->
-        {
-            String selectedItem = (String) itemComboBox.getSelectedItem();
-            boolean isReceived = receivedCheckBox.isSelected();
-            double splitAmount;
-            int teamSize;
-
-            try
-            {
-                splitAmount = Double.parseDouble(splitTextField.getText());
-                teamSize = Integer.parseInt(teamSizeField.getText());
-            } catch (NumberFormatException ex)
-            {
-                splitAmount = 0.0; // Handle invalid number format
-                teamSize = 0;
-            }
-
-            updateItem(selectedItem, isReceived, splitAmount, teamSize, isReceived);
-            updateTotals();
-        });
+        addButton.addActionListener(e -> addNewDrop());
         userInputPanel.add(addButton, gbc);
 
         add(userInputPanel, BorderLayout.SOUTH);
     }
 
-    private void initializeSecondaryTable()
-    {
-        String[] detailColumnNames = {"Item", "Split", "Date", "Team", "Drop"};
-        itemDetailsTableModel = new DefaultTableModel(detailColumnNames, 0);
-        itemDetailsTable = new JTable(itemDetailsTableModel);
-        itemDetailsTable.setTableHeader(new ToolTipHeader(itemDetailsTable.getColumnModel()));
-
-        // Center cell text
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
-        // Set the renderer to each column
-        for (int i = 0; i < itemDetailsTableModel.getColumnCount(); i++)
-        {
-            itemDetailsTable.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
-        }
-
-        // Listener for delete
-        itemDetailsTable.addMouseListener(new MouseAdapter()
-        {
-            @Override
-            public void mousePressed(MouseEvent e)
-            {
-                if (SwingUtilities.isRightMouseButton(e))
-                {
-                    int row = itemDetailsTable.rowAtPoint(e.getPoint());
-                    if (row >= 0 && row < itemDetailsTable.getRowCount())
-                    {
-                        itemDetailsTable.setRowSelectionInterval(row, row);
-                        showDeletePopup(e.getX(), e.getY(), row);
-                    }
-                }
-            }
-        });
-
-
-        // Configure the table to use the short names in the "Item" column
-        itemDetailsTable.getColumnModel().getColumn(0).setCellRenderer(new TableCellRenderer()
-        {
-            @Override
-            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column)
-            {
-                if (value instanceof String)
-                {
-                    for (NexUniques unique : NexUniques.values())
-                    {
-                        if (unique.getFullName().equals(value.toString()))
-                        {
-                            return new JLabel(unique.getShortName());
-                        }
-                    }
-                }
-                return new JLabel(value.toString());
-            }
-
-
-
-        });
-
-        // Add a JScrollPane for the secondary table
-        JScrollPane itemDetailsScrollPane = new JScrollPane(itemDetailsTable);
-        itemDetailsScrollPane.setPreferredSize(new Dimension(400, 250));
-
-        // Add the JScrollPane to panel
-        add(itemDetailsScrollPane, BorderLayout.SOUTH);
-
-        // Schedule the adjustment of column widths
-        SwingUtilities.invokeLater(this::adjustColumnWidths);
-    }
-
-    private void adjustColumnWidths()
-    {
-        TableColumnModel columnModel = itemDetailsTable.getColumnModel();
-        if (columnModel.getColumnCount() == 5)
-        {
-            columnModel.getColumn(0).setPreferredWidth(50); // Width for 'Item' column
-            columnModel.getColumn(1).setPreferredWidth(50); // Width for 'Split' column
-            columnModel.getColumn(2).setPreferredWidth(100); // Width for 'Date' column
-            columnModel.getColumn(3).setPreferredWidth(40); // Width for 'Team Size' column
-            columnModel.getColumn(4).setPreferredWidth(40); // Width for 'Received or Seen'
-        }
-    }
-
     private void showDeletePopup(int x, int y, int row)
     {
         JPopupMenu popupMenu = new JPopupMenu();
+
+        JMenuItem editItem = new JMenuItem("Edit");
+        editItem.addActionListener(e -> editTableEntry(row));
+        popupMenu.add(editItem);
+
+        popupMenu.addSeparator();
+
         JMenuItem deleteItem = new JMenuItem("Delete");
-        deleteItem.addActionListener(e -> deleteItemFromTable(row));
+        deleteItem.addActionListener(e -> {
+            int result = JOptionPane.showConfirmDialog(
+                this,
+                "Are you sure you want to delete this entry?",
+                "Confirm Delete",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE
+            );
+            if (result == JOptionPane.YES_OPTION) {
+                deleteItemFromTable(row);
+            }
+        });
         popupMenu.add(deleteItem);
-        popupMenu.show(itemDetailsTable, x, y);
+        popupMenu.show(tableManager.getSecondaryTable(), x, y);
+    }
+
+    private void editTableEntry(int row)
+    {
+        try {
+            // Get the item details from the table
+            String displayName = (String) tableManager.getSecondaryTableModel().getValueAt(row, 0);
+            double splitAmount = (Double) tableManager.getSecondaryTableModel().getValueAt(row, 1);
+            String dateOrKillCount = (String) tableManager.getSecondaryTableModel().getValueAt(row, 2);
+            int teamSize = (Integer) tableManager.getSecondaryTableModel().getValueAt(row, 3);
+
+            // Find the actual item in the data
+            ItemDataV2 itemToEdit = dataManager.findItemByTableRowData(displayName, splitAmount, dateOrKillCount, teamSize, config);
+
+            if (itemToEdit != null) {
+                // Create and show edit dialog
+                Frame parentFrame = (Frame) SwingUtilities.getWindowAncestor(this);
+                EditEntryDialog editDialog = new EditEntryDialog(parentFrame, itemToEdit, config);
+                editDialog.setVisible(true);
+
+                // If user confirmed the edit, update the data
+                if (editDialog.isConfirmed()) {
+                    ItemDataV2 editedItem = editDialog.getEditedItem();
+                    dataManager.updateItem(itemToEdit, editedItem);
+                    updateTables();
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "Could not find the selected item to edit.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (Exception ex) {
+            logger.severe("Error editing item: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Error editing item: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void deleteItemFromTable(int row)
     {
-        // Get the item name from the secondary table
-        String itemName = (String) itemDetailsTableModel.getValueAt(row, 0);
+        try {
+            // Get the item details from the table
+            String itemName = (String) tableManager.getSecondaryTableModel().getValueAt(row, 0);
+            double splitAmount = (Double) tableManager.getSecondaryTableModel().getValueAt(row, 1);
+            String dateOrKillCount = (String) tableManager.getSecondaryTableModel().getValueAt(row, 2);
+            int teamSize = (Integer) tableManager.getSecondaryTableModel().getValueAt(row, 3);
 
-        // Convert short name back to full name for matching
-        String fullName = convertShortNameToFullName(itemName);
+            // Convert short name back to full name for matching
+            String fullName = tableManager.convertShortNameToFullName(itemName);
 
-        // Remove from secondary table
-        itemDetailsTableModel.removeRow(row);
+            // Find the matching item in the data
+            ItemDataV2 toRemove = null;
+            for (ItemDataV2 item : dataManager.getAllItems()) {
+                if (item.getItemName().equals(fullName) &&
+                    item.getSplitAmount() == splitAmount &&
+                    item.getTeamSize() == teamSize) {
 
-        // Find and remove the corresponding item from the itemDataList
-        ItemData toRemove = null;
-        for (ItemData item : itemDataList)
-        {
-            if (item.getItemName().equals(fullName))
-            {
-                toRemove = item;
-                break;
-            }
-        }
-        if (toRemove != null)
-        {
-            itemDataList.remove(toRemove);
-            updatePrimaryTable();
-            String dataFilePath = new File(PLUGIN_DIR, "data.json").getAbsolutePath();
-            saveDataToFile(dataFilePath);
-        }
-    }
-
-    private String convertShortNameToFullName(String shortName)
-    {
-        for (NexUniques unique : NexUniques.values())
-        {
-            if (unique.getShortName().equals(shortName))
-            {
-                return unique.getFullName();
-            }
-        }
-        return shortName; // Fallback, in case no match is found
-    }
-
-    private void updatePrimaryTable()
-    {
-        resetPrimaryTableData();
-
-        // Aggregate counts and splits for each unique item in itemDataList
-        Map<String, ItemAggregatedData> aggregatedDataMap = new HashMap<>();
-        for (ItemData item : itemDataList)
-        {
-            String itemName = item.getItemName();
-            aggregatedDataMap.putIfAbsent(itemName, new ItemAggregatedData());
-            ItemAggregatedData aggregatedData = aggregatedDataMap.get(itemName);
-
-            if (item.isReceived())
-            {
-                aggregatedData.increaseReceived();
-            }
-            else
-            {
-                aggregatedData.increaseSeen();
-            }
-            aggregatedData.increaseSplit(item.getSplitAmount());
-        }
-
-        // Update the primary table with aggregated data
-        for (Map.Entry<String, ItemAggregatedData> entry : aggregatedDataMap.entrySet())
-        {
-            String itemName = entry.getKey();
-            ItemAggregatedData aggregatedData = entry.getValue();
-
-            int index = findRowIndexByItemName(itemName);
-            if (index != -1)
-            {
-                tableModel.setValueAt(aggregatedData.getReceivedCount(), index, 1); // Update 'Received' count
-                tableModel.setValueAt(aggregatedData.getSeenCount(), index, 2); // Update 'Seen' count
-                tableModel.setValueAt(aggregatedData.getTotalSplit(), index, 3); // Update 'Split' value
-            }
-        }
-
-        updateTotals();
-    }
-
-
-    public class ItemAggregatedData
-    {
-        private int receivedCount = 0;
-        private int seenCount = 0;
-        private double totalSplit = 0.0;
-
-        public void increaseReceived()
-        {
-            receivedCount++;
-        }
-
-        public void increaseSeen()
-        {
-            seenCount++;
-        }
-
-        public void increaseSplit(double split)
-        {
-            totalSplit += split;
-        }
-
-        public int getReceivedCount()
-        {
-            return receivedCount;
-        }
-
-        public int getSeenCount()
-        {
-            return seenCount;
-        }
-
-        public double getTotalSplit()
-        {
-            return totalSplit;
-        }
-    }
-
-
-
-    private void resetPrimaryTableData()
-    {
-        // Reset the counts and splits for all items in the primary table
-        for (int i = 1; i < tableModel.getRowCount() - 1; i++)
-        {
-            tableModel.setValueAt(0, i, 1); // Reset 'Received' count
-            tableModel.setValueAt(0, i, 2); // Reset 'Seen' count
-            tableModel.setValueAt(0.0, i, 3); // Reset 'Split' value
-        }
-    }
-
-    private void updateItem(String itemName, boolean received, double splitAmount, int teamSize, boolean isReceived)
-    {
-        int index = findRowIndexByItemName(itemName);
-        if (index != -1 && index < tableModel.getRowCount() - 1)
-        {
-            int currentReceived = (Integer) tableModel.getValueAt(index, 1);
-            int currentSeen = (Integer) tableModel.getValueAt(index, 2);
-            double currentSplit = (Double) tableModel.getValueAt(index, 3);
-
-            if (received)
-            {
-                currentReceived++;
-            }
-            else
-            {
-                currentSeen++;
-            }
-
-            currentSplit += splitAmount;
-
-            tableModel.setValueAt(currentReceived, index, 1);
-            tableModel.setValueAt(currentSeen, index, 2);
-            tableModel.setValueAt(currentSplit, index, 3);
-
-            String formattedDate = LocalDate.now().format(DateTimeFormatter.ofPattern("MM/dd/yy"));
-
-            // Add to secondary table
-            LocalDate currentDate = LocalDate.now();
-            ItemData newItem = new ItemData(itemName, splitAmount, formattedDate, teamSize, isReceived);
-            itemDataList.add(newItem);
-            updateSecondaryTable();
-        }
-        updateTotals();
-        String dataFilePath = new File(PLUGIN_DIR, "data.json").getAbsolutePath();
-        saveDataToFile(dataFilePath);
-    }
-
-    private int findRowIndexByItemName(String itemName)
-    {
-        for (int i = 0; i < tableModel.getRowCount(); i++)
-        {
-            Object cellValue = tableModel.getValueAt(i, 0);
-            if (cellValue instanceof ImageIcon)
-            {
-                ImageIcon icon = (ImageIcon) cellValue;
-                if (icon.getDescription().equals(itemName))
-                {
-                    return i;
+                    // Additional check for date match
+                    if (!config.showKillCount() && item.getDate().equals(dateOrKillCount)) {
+                        toRemove = item;
+                        break;
+                    }
+                    // Additional check for kill count match
+                    else if (config.showKillCount() && item.hasKillCount() &&
+                             item.getKillCount().toString().equals(dateOrKillCount)) {
+                        toRemove = item;
+                        break;
+                    }
+                    // If no kill count or N/A displayed
+                    else if (config.showKillCount() && !item.hasKillCount() && "N/A".equals(dateOrKillCount)) {
+                        toRemove = item;
+                        break;
+                    }
                 }
             }
-        }
-        return -1;
-    }
 
-    private void updateSecondaryTable()
-    {
-        itemDetailsTableModel.setRowCount(0); // Clear the table
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yy");
-
-        for (ItemData item : itemDataList)
-        {
-            JButton removeButton = new JButton("Remove");
-            removeButton.addActionListener(e -> removeItem(item));
-
-            LocalDate date = LocalDate.parse(item.getDate(), formatter);
-            String formattedDate = date.format(DateTimeFormatter.ofPattern("MM/dd/yy"));
-            String drop = item.isReceived() ? "R" : "S";
-
-            itemDetailsTableModel.addRow(new Object[]{
-                    item.getItemName(),
-                    item.getSplitAmount(),
-                    formattedDate,
-                    item.getTeamSize(),
-                    drop,
-                    removeButton
-            });
-        }
-    }
-
-
-    private void removeItem(ItemData item)
-    {
-        itemDataList.remove(item);
-        updateSecondaryTable();
-        String dataFilePath = new File(PLUGIN_DIR, "data.json").getAbsolutePath();
-        saveDataToFile(dataFilePath);
-    }
-
-
-    private void updateTotals()
-    {
-        int totalDrops = 0;
-        int totalReceived = 0;
-        int totalSeen = 0;
-        double totalSplit = 0.0;
-
-        for (int i = 1; i < tableModel.getRowCount() - 1; i++)
-        {
-            totalReceived += (Integer) tableModel.getValueAt(i, 1);
-            totalSeen += (Integer) tableModel.getValueAt(i, 2);
-            totalSplit += (Double) tableModel.getValueAt(i, 3);
-        }
-
-        totalDrops = totalReceived + totalSeen;
-
-        int lastRowIndex = tableModel.getRowCount() - 1;
-        tableModel.setValueAt("Total Drops", lastRowIndex, 0);
-        tableModel.setValueAt(totalReceived, lastRowIndex, 1);
-        tableModel.setValueAt(totalSeen, lastRowIndex, 2);
-        tableModel.setValueAt(totalSplit, lastRowIndex, 3);
-    }
-
-
-    private static class ImageRenderer extends DefaultTableCellRenderer
-    {
-        @Override
-        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column)
-        {
-            if (value instanceof ImageIcon)
-            {
-                JLabel label = new JLabel((ImageIcon) value);
-                label.setHorizontalAlignment(JLabel.CENTER);
-                return label;
+            if (toRemove != null) {
+                dataManager.removeItem(toRemove);
+                updateTables();
             }
-            return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+        } catch (Exception e) {
+            logger.severe("Error deleting item: " + e.getMessage());
+            JOptionPane.showMessageDialog(this, "Error deleting item: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
-
 
 }
-
