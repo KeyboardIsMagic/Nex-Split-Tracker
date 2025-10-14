@@ -1,18 +1,17 @@
 package com.nexsplittracker;
 
 import com.google.gson.Gson;
+import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.RuneLite;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
+@Slf4j
 public class DataManager
 {
-    private static final Logger logger = Logger.getLogger(DataManager.class.getName());
     private static final File PLUGIN_DIR = new File(RuneLite.RUNELITE_DIR, "NexSplitTracker");
     private static final String DATA_FILE_NAME = "data.json";
 
@@ -35,11 +34,11 @@ public class DataManager
         {
             String dataFilePath = getDataFilePath();
             itemDataList = migrationUtil.loadData(dataFilePath);
-            logger.info("Loaded " + itemDataList.size() + " items from data file");
+            log.debug("Loaded " + itemDataList.size() + " items from data file");
         }
         catch (IOException e)
         {
-            logger.log(Level.SEVERE, "Error loading data file", e);
+            log.error("Error loading data file", e);
             itemDataList = new ArrayList<>();
         }
     }
@@ -50,11 +49,11 @@ public class DataManager
         {
             String dataFilePath = getDataFilePath();
             migrationUtil.saveData(itemDataList, dataFilePath);
-            logger.info("Saved " + itemDataList.size() + " items to data file");
+            log.debug("Saved " + itemDataList.size() + " items to data file");
         }
         catch (IOException e)
         {
-            logger.log(Level.SEVERE, "Error saving data file", e);
+            log.error("Error saving data file", e);
         }
     }
 
@@ -143,11 +142,11 @@ public class DataManager
             boolean created = PLUGIN_DIR.mkdirs();
             if (created)
             {
-                logger.info("Created plugin directory: " + PLUGIN_DIR.getAbsolutePath());
+                log.debug("Created plugin directory: " + PLUGIN_DIR.getAbsolutePath());
             }
             else
             {
-                logger.warning("Failed to create plugin directory: " + PLUGIN_DIR.getAbsolutePath());
+                log.warn("Failed to create plugin directory: " + PLUGIN_DIR.getAbsolutePath());
             }
         }
     }

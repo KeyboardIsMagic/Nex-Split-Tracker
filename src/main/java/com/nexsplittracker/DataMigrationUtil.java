@@ -6,6 +6,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.FileReader;
@@ -18,12 +19,10 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
+@Slf4j
 public class DataMigrationUtil
 {
-    private static final Logger logger = Logger.getLogger(DataMigrationUtil.class.getName());
     private static final String CURRENT_VERSION = "2.0";
     private final Gson gson;
 
@@ -50,7 +49,7 @@ public class DataMigrationUtil
         File file = new File(filePath);
         if (!file.exists())
         {
-            logger.info("Data file does not exist, starting with empty data: " + filePath);
+            log.debug("Data file does not exist, starting with empty data: " + filePath);
             return new ArrayList<>();
         }
 
@@ -61,7 +60,7 @@ public class DataMigrationUtil
 
             if (jsonElement == null)
             {
-                logger.info("Empty or invalid JSON file, starting with empty data");
+                log.debug("Empty or invalid JSON file, starting with empty data");
                 return new ArrayList<>();
             }
 
@@ -78,16 +77,16 @@ public class DataMigrationUtil
             if (jsonElement.isJsonArray())
             {
                 // Legacy format - array of ItemData objects
-                logger.info("Detected legacy data format, performing migration");
+                log.debug("Detected legacy data format, performing migration");
                 return migrateLegacyData(jsonElement.getAsJsonArray(), filePath);
             }
 
-            logger.warning("Unknown data format, starting with empty data");
+            log.warn("Unknown data format, starting with empty data");
             return new ArrayList<>();
         }
         catch (JsonParseException e)
         {
-            logger.log(Level.SEVERE, "Error parsing JSON data file: " + filePath, e);
+            log.error("Error parsing JSON data file: " + filePath, e);
             throw new IOException("Failed to parse data file", e);
         }
     }
@@ -95,7 +94,7 @@ public class DataMigrationUtil
     private List<ItemDataV2> loadVersionedData(JsonObject jsonObject)
     {
         String version = jsonObject.get("version").getAsString();
-        logger.info("Loading data file version: " + version);
+        log.debug("Loading data file version: " + version);
 
         JsonArray dataArray = jsonObject.getAsJsonArray("data");
         Type listType = new TypeToken<ArrayList<ItemDataV2>>(){}.getType();
@@ -125,7 +124,7 @@ public class DataMigrationUtil
             migratedData.add(new ItemDataV2(oldItem));
         }
 
-        logger.info("Migrated " + migratedData.size() + " items from legacy format");
+        log.debug("Migrated " + migratedData.size() + " items from legacy format");
 
         // Save in new format
         saveData(migratedData, filePath);
@@ -141,11 +140,11 @@ public class DataMigrationUtil
         {
             gson.toJson(dataFile, writer);
             writer.flush();
-            logger.info("Data saved to file: " + filePath + " (version: " + CURRENT_VERSION + ")");
+            log.debug("Data saved to file: " + filePath + " (version: " + CURRENT_VERSION + ")");
         }
         catch (IOException e)
         {
-            logger.log(Level.SEVERE, "Error saving data to file: " + filePath, e);
+            log.error("Error saving data to file: " + filePath, e);
             throw e;
         }
     }
@@ -165,11 +164,11 @@ public class DataMigrationUtil
         try
         {
             Files.copy(originalFile.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            logger.info("Created backup: " + backupPath);
+            log.debug("Created backup: " + backupPath);
         }
         catch (IOException e)
         {
-            logger.log(Level.WARNING, "Failed to create backup before migration", e);
+            log.warn("Failed to create backup before migration", e);
             throw new IOException("Failed to create backup before migration", e);
         }
     }
