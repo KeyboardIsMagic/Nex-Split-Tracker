@@ -84,7 +84,14 @@ public class TableManager
     public JTable initializeSecondaryTable()
     {
         String[] detailColumnNames = getSecondaryTableColumnNames();
-        secondaryTableModel = new DefaultTableModel(detailColumnNames, 0);
+        secondaryTableModel = new DefaultTableModel(detailColumnNames, 0)
+        {
+            @Override
+            public boolean isCellEditable(int row, int column)
+            {
+                return false;
+            }
+        };
         secondaryTable = new JTable(secondaryTableModel);
         secondaryTable.setTableHeader(new ToolTipHeader(secondaryTable.getColumnModel()));
         secondaryTable.setToolTipText("Double-click to edit an entry, right-click for options");

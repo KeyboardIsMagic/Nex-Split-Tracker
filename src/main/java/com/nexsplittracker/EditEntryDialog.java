@@ -169,10 +169,18 @@ public class EditEntryDialog extends JDialog
                 String date = validateDate(dateField.getText());
                 boolean isReceived = receivedCheckBox.isSelected();
 
-                Integer killCount = null;
-                if (killCountField != null && !killCountField.getText().trim().isEmpty())
+                // Preserve original kill count if field is not visible
+                Integer killCount = originalItem.getKillCount();
+                if (killCountField != null)
                 {
-                    killCount = validateAndParseInt(killCountField.getText(), "Kill Count");
+                    if (!killCountField.getText().trim().isEmpty())
+                    {
+                        killCount = validateAndParseInt(killCountField.getText(), "Kill Count");
+                    }
+                    else
+                    {
+                        killCount = null; // User explicitly cleared the field
+                    }
                 }
 
                 // Update the edited item
